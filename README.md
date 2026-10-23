@@ -1,5 +1,7 @@
 # Ascent Flight
 
+[![tests](https://github.com/calebschalesky-ops/ascent/actions/workflows/tests.yml/badge.svg)](https://github.com/calebschalesky-ops/ascent/actions/workflows/tests.yml) ![license](https://img.shields.io/badge/license-MIT-blue)
+
 **[▶ Play it in your browser](https://calebschalesky-ops.github.io/ascent/)**: desktop, phone or gamepad. No install.
 
 A 3D space game set across the Solar System. Seven peoples (Earth, the Moon, Mercury, Venus, Mars, Callisto/Ganymede, Titan) each have their own government, navy, ship designs and old enemy. You build a pilot, fit a ship, and fly from a shakedown flight up to fleet battles.
@@ -43,3 +45,7 @@ npm run build
 In development, `window.__voyage` drives the flight from the console (`run(seconds)`, `enter(dest)`, `snap()`, `setWeapon`), which is how the agents tested flight without a human at the keyboard.
 
 `SPEC.md` is the design contract. `vision/`, `TIMELINE.md` and the research files are the world and its history.
+
+## About this repo
+
+A cleaned public snapshot of the private repo's game branch: 435 commits from 2026-10-18 to 2026-10-22, squashed here so local paths and session ids stay out of the history. MIT licensed.
