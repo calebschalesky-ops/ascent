@@ -1,0 +1,94 @@
+/* The tactical view (PKG-12). Shared tokens only (styles.css); --house is the ship's own house glow, set per icon. */
+.tac-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+/* Ships as icons by class: the outline in the house glow, a soft glow under it. */
+.tac-icon { fill: color-mix(in srgb, var(--house) 22%, transparent); stroke: var(--house); stroke-width: 1.5; stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px var(--house)); }
+.tac-broken .tac-icon { stroke-dasharray: 3 2; opacity: 0.7; }
+.tac-flag { fill: var(--hud); stroke: none; }
+
+/* Shield arcs. His own: cyan, length = charge, weight = power split. The enemy's: only what was seen. */
+.tac-arc { fill: none; stroke-linecap: round; }
+.tac-own .tac-arc-up { stroke: var(--cyan); }
+.tac-own .tac-arc-down { stroke: var(--danger); stroke-dasharray: 1 3; }
+.tac-foe .tac-arc-up { stroke: var(--amber); }
+.tac-foe .tac-arc-down { stroke: var(--danger); filter: drop-shadow(0 0 3px var(--danger)); } /* PKG-22: solid and glowing, an open enemy side reads at 1280 */
+.tac-breach { stroke: var(--danger); stroke-width: 3.2; stroke-linecap: round; } /* PKG-22: 2.4 -> 3.2 */
+.tac-arc-unknown { stroke: var(--hud-dim); stroke-dasharray: 2 4; opacity: 0.7; } /* PKG-22: 1 4 / .55 -> 2 4 / .7 */
+
+/* The ghost line of a maneuver being chosen, its time to completion, and where the pods launch. */
+.tac-ghost { fill: none; stroke: var(--cyan); stroke-width: 2; stroke-dasharray: 8 6; stroke-linecap: round; opacity: 0.95;
+  filter: drop-shadow(0 0 2px var(--cyan)); }
+.tac-mark { fill: none; stroke: var(--amber); stroke-width: 1.6; }
+.tac-eta { fill: var(--hud); font: 600 13px var(--body); paint-order: stroke; stroke: var(--night); stroke-width: 3px; }
+.tac-choosing { fill: none; stroke: var(--cyan); stroke-width: 1.4; stroke-dasharray: 4 3; }
+
+/* A maneuver in progress: its remaining path (PKG-09's order-line layer). */
+.cx-path { fill: none; stroke-dasharray: 2 5; stroke-width: 1.8; }
+
+/* The badge while it is open, and the picker's panel (either view). */
+.tac-badge { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--edge-hot); color: var(--cyan); font: 600 12px var(--body); letter-spacing: 0.08em;
+  text-transform: uppercase; pointer-events: none; }
+.tac-panel { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px));
+  padding: 8px 12px; border-radius: 8px; background: var(--glass-strong); border: 1px solid var(--edge-hot); color: var(--hud);
+  font: 13px var(--body); }
+.tac-panel p { margin: 0 0 4px; }
+.tac-panel .tac-sub { color: var(--hud-dim); }
+.tac-panel .tac-eta-text { color: var(--cyan); }
+.tac-actions { display: flex; gap: 8px; margin-top: 4px; }
+.tac-actions button { font: 600 12px var(--body); color: var(--hud); background: var(--glass); border: 1px solid var(--edge-hot);
+  border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.tac-actions button:disabled { opacity: 0.45; cursor: default; }
+.tac-maneuvers { flex-wrap: wrap; }
+.tac-maneuvers > .cx-dim { width: auto; flex: 0 0 100%; }
+.cx-orders .tac-maneuvers { flex: 1 1 100%; }
+.cx-orders .tac-maneuvers > .cx-dim { flex: 0 0 auto; }
+
+/* PKG-17: the help line shares the top centre with the badge and the picker's panel. While the table is open the help
+   line steps down under the badge; while the panel is up (its own keys: Enter, Esc) the help line and the event log
+   (it fades anyway) give way, so the panel keeps its place above the enemy line. */
+@media (min-width: 761px) {
+  .skirmish:has(.tac-badge:not([hidden])) .skirmish-top .skirmish-hint { padding-top: 34px; }
+  .skirmish:has(.tac-panel:not([hidden])) .skirmish-top .skirmish-hint { visibility: hidden; }
+  .skirmish:has(.tac-badge:not([hidden])) .skirmish-bottom, .skirmish:has(.tac-panel:not([hidden])) .skirmish-bottom { display: none; }
+}
+@media (min-width: 761px) and (max-width: 980px) {
+  /* Two lines here: flush right, so the second line clears the queue's command meter. */
+  .skirmish:has(.tac-badge:not([hidden])) .skirmish-top .skirmish-hint { text-align: right; }
+}
+
+@media (max-width: 480px) {
+  /* The title and the side chips stack at the top on a phone: the badge and the panel go to the bottom instead. */
+  .tac-badge { top: auto; bottom: 64px; white-space: nowrap; }
+  .tac-badge-hint { display: none; }
+  .tac-panel { top: auto; bottom: 96px; font-size: 12px; }
+  .tac-eta { font-size: 11px; }
+}
+
+/* PKG-21: a commit that ordered nothing says why (F-05, TRC05-7); a maneuver the ship can never fly says so on its
+   button; the escort warning (TRC05-5). */
+.tac-panel .tac-why { color: var(--amber); }
+.tac-panel .tac-escort-warn { color: var(--amber); }
+.tac-notice { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px));
+  padding: 6px 12px; border-radius: 8px; background: var(--glass-strong); border: 1px solid var(--amber); color: var(--amber);
+  font: 13px var(--body); pointer-events: none; z-index: 3; }
+.tac-maneuvers button.tac-cannot { opacity: 0.6; }
+.tac-cannot-why { color: var(--amber); }
+
+/* PKG-21 F-15: the Tactical button. A phone has no T key; desktop keeps the key and the help line. */
+.tac-toggle { display: none; }
+@media (max-width: 760px), (pointer: coarse) {
+  .tac-toggle:not([hidden]) {
+    display: block; position: absolute; right: 100px; bottom: 12px; z-index: 2; min-height: 40px; padding: 6px 14px;
+    border-radius: 999px; border: 1px solid var(--edge-hot); background: var(--glass-strong); color: var(--cyan);
+    font: 600 14px var(--body); cursor: pointer;
+  }
+  .tac-toggle[aria-pressed='true'] { border-color: var(--cyan); }
+  .skirmish:has(.cx-open) .tac-toggle, .skirmish:has(.skirmish-end) .tac-toggle { display: none; }
+}
+@media (max-width: 480px) {
+  .tac-notice { top: auto; bottom: 150px; font-size: 12px; }
+}
+/* PKG-21: the picker's panel and its notice sit above the comms queue (at 800 px the queue's first card covered Commit). */
+.tac-panel { z-index: 3; }

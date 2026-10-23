@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ship styles</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #070a1f; color: #cfd6e6; font: 14px system-ui, sans-serif; overflow: hidden; }
+      canvas { display: block; width: 100%; height: 100%; }
+      .label { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none; text-shadow: 0 1px 3px #000; }
+      .label { font-size: 12px; }
+      .label b { display: block; font-size: 14px; }
+      .bar { position: absolute; top: 10px; left: 12px; }
+      .bar button { background: #182040; color: inherit; border: 1px solid #34406a; border-radius: 4px; padding: 4px 10px; margin-right: 6px; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="bar"><button id="spin">Spin</button><button id="sil">Silhouettes</button><button id="set">All / capital / cruiser / fighter</button></div>
+    <!-- Dev only: not an entry of the production build. -->
+    <script type="module" src="/src/dev/gallery.ts"></script>
+  </body>
+</html>

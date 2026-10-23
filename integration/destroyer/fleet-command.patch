@@ -1,0 +1,198 @@
+diff --git a/src/components/fleet/TacticalView.tsx b/src/components/fleet/TacticalView.tsx
+index 463f873..e207d7c 100644
+--- a/src/components/fleet/TacticalView.tsx
++++ b/src/components/fleet/TacticalView.tsx
+@@ -90,8 +90,10 @@ export default function TacticalView({ fleet }: { fleet: FleetCommand }) {
+       ctx.rotate(ang);
+       ctx.fillStyle = col;
+       ctx.strokeStyle = col;
+-      const len = Math.max(SHIP_SPECS[x.type].size * fleet.world.L * g.k, x.type === 'capital' ? 14 : x.type === 'cruiser' ? 9 : 5);
++      const len = Math.max(SHIP_SPECS[x.type].size * fleet.world.L * g.k, x.type === 'capital' ? 14 : x.type === 'destroyer' ? 11 : x.type === 'cruiser' ? 9 : 5);
+       if (x.type === 'capital') ctx.fillRect(-len / 2, -len / 7, len, len / 3.5);
++      // A destroyer: a long thin dart, between the cruiser's triangle and the capital ship's bar.
++      else if (x.type === 'destroyer') { ctx.beginPath(); ctx.moveTo(len / 2, 0); ctx.lineTo(-len / 2, len / 5); ctx.lineTo(-len / 3, 0); ctx.lineTo(-len / 2, -len / 5); ctx.closePath(); ctx.fill(); }
+       else if (x.type === 'cruiser') { ctx.beginPath(); ctx.moveTo(len / 2, 0); ctx.lineTo(-len / 2, len / 2.6); ctx.lineTo(-len / 2, -len / 2.6); ctx.closePath(); ctx.fill(); }
+       else { ctx.beginPath(); ctx.arc(0, 0, len / 2, 0, Math.PI * 2); ctx.fill(); }
+       ctx.restore();
+diff --git a/src/components/fleet/fleetRuntime.ts b/src/components/fleet/fleetRuntime.ts
+index 594a925..c804219 100644
+--- a/src/components/fleet/fleetRuntime.ts
++++ b/src/components/fleet/fleetRuntime.ts
+@@ -41,7 +41,7 @@ export function createFleetCommand(scene: THREE.Scene, combat: Combat, geo: () =
+   const world: FleetWorld = { time: 0, L, agents: new Map(), wings: [], bolts: [], bodies: [], stats: newStats() };
+   let rank: Rank = rankById('pilot');
+   let flagship: Craft | null = null;
+-  const bay: Record<ShipType, number> = { capital: 0, cruiser: 0, fighter: 0 };
++  const bay: Record<ShipType, number> = { capital: 0, cruiser: 0, fighter: 0, destroyer: 0 };
+   let selected: number | 'all' = 'all';
+   let lastOrder: string | null = null;
+   const prevPos = new Map<number, V3>();
+@@ -92,10 +92,10 @@ export function createFleetCommand(scene: THREE.Scene, combat: Combat, geo: () =
+     world.bodies = geo().filter((g) => g.size > 0).map((g) => ({ pos: g.pos, size: g.size }));
+   }
+ 
+-  const wingName = (type: ShipType, k: number) => (type === 'cruiser' ? 'Cruisers' : type === 'capital' ? 'Capitals' : ['Alpha', 'Beta', 'Gamma', 'Delta'][k] ?? `Wing ${k + 1}`);
++  const wingName = (type: ShipType, k: number) => (type === 'cruiser' ? 'Cruisers' : type === 'capital' ? 'Capitals' : type === 'destroyer' ? 'Destroyers' : ['Alpha', 'Beta', 'Gamma', 'Delta'][k] ?? `Wing ${k + 1}`);
+   const ourWings = () => world.wings.filter((w) => w.side === 0 && !w.own);
+   const flying = () => {
+-    const f: Record<ShipType, number> = { capital: 0, cruiser: 0, fighter: 0 };
++    const f: Record<ShipType, number> = { capital: 0, cruiser: 0, fighter: 0, destroyer: 0 };
+     for (const w of ourWings()) for (const a of activeMembers(w, world)) f[a.type]++;
+     return f;
+   };
+@@ -106,7 +106,7 @@ export function createFleetCommand(scene: THREE.Scene, combat: Combat, geo: () =
+     const open = mine.find((w) => w.members.length < 4 && w.members.every((id) => world.agents.get(id)?.type === type));
+     if (open) return open;
+     const k = mine.length;
+-    const w = makeWing(wingName(type, k), 0, [], { kind: 'follow', leader: flagship!.id }, type === 'cruiser' ? 'line' : 'wedge', 'defensive');
++    const w = makeWing(wingName(type, k), 0, [], { kind: 'follow', leader: flagship!.id }, type === 'cruiser' || type === 'destroyer' ? 'line' : 'wedge', 'defensive');
+     // Each wing keeps its own station on the flagship: cruisers abreast of it, fighter wings above and to either side.
+     const n = ourWings().length;
+     w.station = STATIONS[n % STATIONS.length];
+diff --git a/src/lib/fleet/brain.ts b/src/lib/fleet/brain.ts
+index e244591..1354d99 100644
+--- a/src/lib/fleet/brain.ts
++++ b/src/lib/fleet/brain.ts
+@@ -38,6 +38,17 @@ export function think(a: Agent, w: Wing, world: FleetWorld): Intent {
+     const to = sub(t.pos, a.pos);
+     const d = len(to);
+     const standoff = spec.range * L * st.standoff;
++    if (a.type === 'destroyer') {
++      // The hunter (claude/destroyer-a8ff7d): in flat out, then circle its target at speed with its turrets on it,
++      // turning away from the target's nose, so a fixed-gun cruiser cannot bring its guns round.
++      if (d > standoff * 1.3) return { want: sub(leadPoint(a.pos, t.pos, t.vel, spec.speed * L), a.pos), speed: spec.speed * L, mode: 'engage' };
++      const out = scale(unit(to), -1);
++      let tan = unit(cross(out, [0, 1, 0]));
++      if (len(tan) < 1e-6) tan = [1, 0, 0];
++      if (dot(tan, t.fwd) > 0) tan = scale(tan, -1);
++      const r = Math.max(standoff, t.radius + a.radius + L);
++      return { want: add(tan, scale(out, (1.5 * (r - d)) / r)), speed: spec.speed * L, mode: 'engage' };
++    }
+     if (a.type === 'capital') {
+       // Close to its standoff, then turn broadside and hold there: its guns are turrets.
+       const want = d > standoff ? to : cross(to, [0, 1, 0]);
+diff --git a/src/lib/fleet/command.ts b/src/lib/fleet/command.ts
+index 9038638..daf7725 100644
+--- a/src/lib/fleet/command.ts
++++ b/src/lib/fleet/command.ts
+@@ -8,9 +8,9 @@ import type { ShipType } from '../shipTypes';
+ import { SHIP_TYPES } from '../shipTypes';
+ 
+ /** What a ship costs against the fleet cap. A capital ship is worth ten fighters. */
+-export const COMMAND_POINTS: Record<ShipType, number> = { capital: 10, cruiser: 3, fighter: 1 };
++export const COMMAND_POINTS: Record<ShipType, number> = { capital: 10, cruiser: 3, fighter: 1, destroyer: 5 };
+ 
+-export type RankId = 'pilot' | 'flightLead' | 'squadron' | 'captain' | 'commodore' | 'admiral';
++export type RankId = 'pilot' | 'flightLead' | 'squadron' | 'commander' | 'captain' | 'commodore' | 'admiral';
+ 
+ export interface Rank {
+   id: RankId;
+@@ -30,16 +30,19 @@ export interface Rank {
+ }
+ 
+ export const RANKS: Rank[] = [
+-  { id: 'pilot', label: 'Pilot', level: 1, unlock: "Start: your race's cruiser", hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 0 }, cap: 0, wings: 0 },
+-  { id: 'flightLead', label: 'Flight lead', level: 2, unlock: "Level 2: the cruiser's bay opens (progression: 1 fighter, 2 at level 4, 3 at 6)", hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 3 }, cap: 3, wings: 1 },
+-  { id: 'squadron', label: 'Squadron leader', level: 8, unlock: 'Level 8: the fourth bay slot (progression)', hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 4 }, cap: 4, wings: 1 },
+-  { id: 'captain', label: 'Captain', level: 10, unlock: 'Level 10 and the mission "Take command"', hull: 'capital', bay: { capital: 0, cruiser: 2, fighter: 8 }, cap: 14, wings: 3 },
+-  { id: 'commodore', label: 'Commodore', level: 10, unlock: 'Captain, and a second capital ship (bought or captured)', hull: 'capital', bay: { capital: 0, cruiser: 4, fighter: 16 }, cap: 38, wings: 5 },
+-  { id: 'admiral', label: 'Admiral', level: 10, unlock: 'Commodore, and a shipyard (a held planet)', hull: 'capital', bay: { capital: 0, cruiser: 8, fighter: 32 }, cap: 100, wings: 8 },
++  { id: 'pilot', label: 'Pilot', level: 1, unlock: "Start: your race's cruiser", hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 0, destroyer: 0 }, cap: 0, wings: 0 },
++  { id: 'flightLead', label: 'Flight lead', level: 2, unlock: "Level 2: the cruiser's bay opens (progression: 1 fighter, 2 at level 4, 3 at 6)", hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 3, destroyer: 0 }, cap: 3, wings: 1 },
++  { id: 'squadron', label: 'Squadron leader', level: 8, unlock: 'Level 8: the fourth bay slot (progression)', hull: 'cruiser', bay: { capital: 0, cruiser: 0, fighter: 4, destroyer: 0 }, cap: 4, wings: 1 },
++  // The destroyer (claude/destroyer-a8ff7d, a PROPOSAL for Caleb): between the cruiser and the capital ship, a hull of
++  // its own. Its hangar is two slots (lib/hangars.ts): fewer fighters than the cruiser's four, for its guns and speed.
++  { id: 'commander', label: 'Commander', level: 9, unlock: 'Level 9 and a destroyer (a shipyard sells one, or a mission hands it over)', hull: 'destroyer', bay: { capital: 0, cruiser: 0, fighter: 2, destroyer: 0 }, cap: 6, wings: 2 },
++  { id: 'captain', label: 'Captain', level: 10, unlock: 'Level 10 and the mission "Take command"', hull: 'capital', bay: { capital: 0, cruiser: 2, fighter: 8, destroyer: 0 }, cap: 14, wings: 3 },
++  { id: 'commodore', label: 'Commodore', level: 10, unlock: 'Captain, and a second capital ship (bought or captured)', hull: 'capital', bay: { capital: 0, cruiser: 4, fighter: 16, destroyer: 0 }, cap: 38, wings: 5 },
++  { id: 'admiral', label: 'Admiral', level: 10, unlock: 'Commodore, and a shipyard (a held planet)', hull: 'capital', bay: { capital: 0, cruiser: 8, fighter: 32, destroyer: 0 }, cap: 100, wings: 8 },
+ ];
+ 
+ /** What a rank past the level gates needs. */
+-export interface CommandHas { command?: boolean; capitals?: number; shipyard?: boolean }
++export interface CommandHas { command?: boolean; capitals?: number; shipyard?: boolean; destroyer?: boolean }
+ 
+ /** The rank a player holds at `level`, given what they have done and own. */
+ export function rankFor(level: number, has: CommandHas = {}): Rank {
+@@ -48,6 +51,7 @@ export function rankFor(level: number, has: CommandHas = {}): Rank {
+     if ((has.capitals ?? 1) >= 2) return rankById('commodore');
+     return rankById('captain');
+   }
++  if (level >= rankById('commander').level && has.destroyer) return rankById('commander');
+   return [...RANKS].reverse().find((r) => r.hull === 'cruiser' && level >= r.level) ?? RANKS[0];
+ }
+ /** Whether the level gate for a capital ship is met (the mission is the other half). */
+diff --git a/src/lib/fleet/fleet.test.ts b/src/lib/fleet/fleet.test.ts
+index fcf2fee..9193c9b 100644
+--- a/src/lib/fleet/fleet.test.ts
++++ b/src/lib/fleet/fleet.test.ts
+@@ -253,3 +253,49 @@ describe('ranks and the fleet cap', () => {
+     expect(canField(cap, { cruiser: 2, fighter: 7 }, 'fighter')).toBe(true);
+   });
+ });
++
++describe('destroyers (claude/destroyer-a8ff7d)', () => {
++  it('fly faster and turn quicker than cruisers and capital ships, and out-gun the cruiser', () => {
++    const dps = (t: ShipType) => COMBAT[t].guns * COMBAT[t].rate * COMBAT[t].damage;
++    for (const t of ['cruiser', 'capital'] as const) {
++      expect(COMBAT.destroyer.speed).toBeGreaterThan(COMBAT[t].speed);
++      expect(COMBAT.destroyer.turn).toBeGreaterThan(COMBAT[t].turn);
++    }
++    expect(dps('destroyer')).toBeGreaterThan(dps('cruiser'));
++    expect(dps('destroyer')).toBeLessThan(dps('capital'));
++  });
++  it('take orders: an attack order sends a destroyer wing after the named ship, and it kills it', () => {
++    const foe = agent('cruiser', 1, [0, 0, -60]);
++    const decoy = agent('fighter', 1, [4, 0, -8], false);
++    const ds = [agent('destroyer', 0, [-3, 0, 0]), agent('destroyer', 0, [3, 0, 0])];
++    const w = world([foe, decoy, ...ds]);
++    w.wings.push(makeWing('Destroyers', 0, ds.map((d) => d.id), { kind: 'attack', target: foe.id }, 'line', 'aggressive'));
++    const t = run(w, 60, () => !foe.alive);
++    expect(foe.alive).toBe(false);
++    expect(ds.every((d) => d.target === foe.id || !foe.alive)).toBe(true);
++    expect(t).toBeLessThan(30);
++  });
++  it('one destroyer beats one cruiser in the fleet brains, flying rings round it', () => {
++    let wins = 0;
++    for (let k = 0; k < 6; k++) {
++      const cru = agent('cruiser', 1, [k * 3, 0, -50], true, [0, 0, 1]);
++      const des = agent('destroyer', 0, [0, 0, 0]);
++      const w = world([cru, des]);
++      w.wings.push(makeWing('D', 0, [des.id], { kind: 'attack', target: cru.id }, 'line', 'aggressive'));
++      w.wings.push(makeWing('C', 1, [cru.id], { kind: 'attack', target: des.id }, 'line', 'aggressive'));
++      run(w, 90, () => !cru.alive || !des.alive);
++      if (!cru.alive && des.alive) wins++;
++    }
++    expect(wins).toBeGreaterThanOrEqual(5);
++  });
++  it('a Commander flies a destroyer with a two-fighter bay; it needs the ship, not only the level', () => {
++    expect(rankFor(9).id).toBe('squadron');
++    const c = rankFor(9, { destroyer: true });
++    expect(c.id).toBe('commander');
++    expect(c.hull).toBe('destroyer');
++    expect(c.bay.fighter).toBeLessThan(rankById('squadron').bay.fighter); // a cruiser carries more small craft
++    expect(canField(c, { fighter: 2 }, 'destroyer')).toBe(false);
++    expect(pointsOf({ destroyer: 1 })).toBeGreaterThan(pointsOf({ cruiser: 1 }));
++    expect(pointsOf({ destroyer: 1 })).toBeLessThan(pointsOf({ capital: 1 }));
++  });
++});
+diff --git a/src/lib/fleet/spec.ts b/src/lib/fleet/spec.ts
+index 8fbb9d8..cab84c4 100644
+--- a/src/lib/fleet/spec.ts
++++ b/src/lib/fleet/spec.ts
+@@ -26,9 +26,12 @@ export interface CombatSpec {
+ }
+ 
+ export const COMBAT: Record<ShipType, CombatSpec> = {
+-  capital: { speed: 12, accel: 6, turn: 0.3, range: 160, rate: 1.2, guns: 4, damage: 14, cone: Math.PI, prefers: { capital: 1.6, cruiser: 1.3, fighter: 0.8 } },
+-  cruiser: { speed: 36, accel: 30, turn: 1.3, range: 100, rate: 2.5, guns: 1, damage: 10, cone: 0.2, prefers: { capital: 1.3, cruiser: 1.4, fighter: 0.9 } },
+-  fighter: { speed: 60, accel: 80, turn: 2.6, range: 60, rate: 3, guns: 1, damage: 5, cone: 0.25, prefers: { capital: 0.8, cruiser: 1.1, fighter: 1.6 } },
++  capital: { speed: 12, accel: 6, turn: 0.3, range: 160, rate: 1.2, guns: 4, damage: 14, cone: Math.PI, prefers: { capital: 1.6, cruiser: 1.3, fighter: 0.8, destroyer: 1.4 } },
++  cruiser: { speed: 36, accel: 30, turn: 1.3, range: 100, rate: 2.5, guns: 1, damage: 10, cone: 0.2, prefers: { capital: 1.3, cruiser: 1.4, fighter: 0.9, destroyer: 1.2 } },
++  fighter: { speed: 60, accel: 80, turn: 2.6, range: 60, rate: 3, guns: 1, damage: 5, cone: 0.25, prefers: { capital: 0.8, cruiser: 1.1, fighter: 1.6, destroyer: 1.0 } },
++  // The destroyer (claude/destroyer-a8ff7d DESTROYER.md): faster and more agile than cruiser and capital, three turrets
++  // out-gunning a cruiser, a little under a capital ship. A hunter: it would rather fight cruisers and destroyers.
++  destroyer: { speed: 44, accel: 34, turn: 1.55, range: 120, rate: 1.8, guns: 3, damage: 11, cone: Math.PI, prefers: { capital: 1.1, cruiser: 1.6, fighter: 1.0, destroyer: 1.5 } },
+ };
+ 
+ /** Fleet bolts, L/s. 700 L/s is the player's own laser speed (260 units/s) at today's ship length. */

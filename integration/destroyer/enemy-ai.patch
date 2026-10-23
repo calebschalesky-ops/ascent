@@ -1,0 +1,230 @@
+diff --git a/src/components/combat.ts b/src/components/combat.ts
+index b68c1b0..8dcfcc2 100644
+--- a/src/components/combat.ts
++++ b/src/components/combat.ts
+@@ -53,9 +53,9 @@ export interface Aim {
+  * STAND-IN roster until ship types (claude/ship-types-4d54b4) merges with its Force per nation: one capital ship,
+  * two cruisers and two fighters on each patrol ring. On merge, take ship types' roster and keep the rollFit call.
+  */
+-export const STANDIN_ROSTER: ShipClass[] = ['capital', 'cruiser', 'cruiser', 'fighter', 'fighter'];
++export const STANDIN_ROSTER: ShipClass[] = ['capital', 'destroyer', 'cruiser', 'cruiser', 'fighter', 'fighter'];
+ /** Stand-in look: the one cone model scaled per class until ship types' models (space/fleet.ts) arrive. */
+-const STANDIN_LOOK: Record<ShipClass, number> = { capital: 3, cruiser: 1, fighter: 0.55 };
++const STANDIN_LOOK: Record<ShipClass, number> = { capital: 3, cruiser: 1, fighter: 0.55, destroyer: 1.8 };
+ /** The player ship's length at world scale 1 (ship.ts SHIP_MODEL_LENGTH 2.06 × SHIP 0.18): class radii are in these. */
+ const PLAYER_LEN = 0.371;
+ 
+diff --git a/src/lib/aiKnobs.ts b/src/lib/aiKnobs.ts
+index 63d920f..c56b5b0 100644
+--- a/src/lib/aiKnobs.ts
++++ b/src/lib/aiKnobs.ts
+@@ -51,7 +51,9 @@ export const AI = {
+   mineChase: 60, // drops a mine when the player is this close behind it
+ 
+   // ---- Cruisers and capital ships ----
+-  minStandoff: { capital: 70, cruiser: 45 } as Record<'capital' | 'cruiser', number>,
++  minStandoff: { capital: 70, cruiser: 45, destroyer: 40 } as Record<'capital' | 'cruiser' | 'destroyer', number>,
++  huntOrbit: 0.6, // a destroyer circles the player at this × its standoff …
++  huntSpeed: 1, // … at this × its top speed, on the side away from the player's nose
+   maxStandoff: 300,
+   kite: 1.15, // outranging the player, it sits this × the player's reach out
+   effRange: { bolt: 0.5, beam: 0.85, missile: 0.55, burst: 0.7, mine: 0 } as Record<'bolt' | 'beam' | 'missile' | 'burst' | 'mine', number>,
+diff --git a/src/lib/enemyArms.ts b/src/lib/enemyArms.ts
+index 59c0e1f..ae651c0 100644
+--- a/src/lib/enemyArms.ts
++++ b/src/lib/enemyArms.ts
+@@ -25,8 +25,8 @@ import { ARMOURS, COUNTER_IDS, DRONE_IDS, ENEMY_CHARGES, ENEMY_FIT, REACTORS, TA
+  * hitRadius and dodge numbers. On merge, import `ShipType` and `SHIP_SPECS` from there for those four and keep only
+  * the flight and fitting fields below. Lengths are in player-ship lengths, so a rescaled ship carries through.
+  */
+-export type ShipClass = 'capital' | 'cruiser' | 'fighter';
+-export const SHIP_CLASSES: ShipClass[] = ['capital', 'cruiser', 'fighter'];
++export type ShipClass = 'capital' | 'cruiser' | 'fighter' | 'destroyer';
++export const SHIP_CLASSES: ShipClass[] = ['capital', 'cruiser', 'fighter', 'destroyer'];
+ 
+ export interface ClassSpec {
+   label: string;
+@@ -46,6 +46,9 @@ export const CLASS: Record<ShipClass, ClassSpec> = {
+   capital: { label: 'Capital ship', size: 5, hp: 900, hitRadius: 3, dodge: 0.03, shieldMul: 3, speed: 16, accel: 5, turn: 0.3, weapons: 4, drones: 2, charges: 6 },
+   cruiser: { label: 'Cruiser', size: 1, hp: 100, hitRadius: 1.9, dodge: 0.35, shieldMul: 1, speed: 38, accel: 16, turn: 0.9, weapons: 3, drones: 1, charges: 4 },
+   fighter: { label: 'Fighter', size: 0.2, hp: 36, hitRadius: 1, dodge: 0.6, shieldMul: 0.5, speed: 75, accel: 70, turn: 2.4, weapons: 2, drones: 0, charges: ENEMY_CHARGES },
++  // The destroyer (claude/destroyer-a8ff7d DESTROYER.md): faster and more agile than cruiser and capital, four mid-weight
++  // guns, a small bay (one drone slot).
++  destroyer: { label: 'Destroyer', size: 2.2, hp: 300, hitRadius: 2.3, dodge: 0.38, shieldMul: 1.6, speed: 46, accel: 20, turn: 1.1, weapons: 4, drones: 1, charges: 5 },
+ };
+ 
+ /** How much each class wants each munition, before the nation's doctrine. 0: never carried by this class. */
+@@ -53,12 +56,15 @@ export const CLASS_WEAPON: Record<ShipClass, Record<MunitionId, number>> = {
+   fighter: { pulse: 3, plasma: 1.5, ion: 1, seeker: 2.5, swarm: 1.5, mine: 0.6, flak: 0, beam: 0, rail: 0, torpedo: 0 },
+   cruiser: { pulse: 1.5, plasma: 1.5, ion: 1.2, seeker: 1.5, swarm: 1.2, mine: 0.3, flak: 1, beam: 1, rail: 1.2, torpedo: 0.6 },
+   capital: { pulse: 0.4, plasma: 1, ion: 0.8, seeker: 0.5, swarm: 1, mine: 0, flak: 2, beam: 2.5, rail: 2, torpedo: 3 },
++  // Mid-weight guns and rails; no torpedoes (those are the capital ship's), no mines (it hunts, it does not run).
++  destroyer: { pulse: 0.6, plasma: 1.5, ion: 1, seeker: 0.6, swarm: 1, mine: 0, flak: 1, beam: 2, rail: 2.5, torpedo: 0 },
+ };
+ /** The first slot: fighters and cruisers lead with a gun; capital ships with a heavy weapon. */
+ const PRIMARY: Record<ShipClass, MunitionId[]> = {
+   fighter: ['pulse', 'plasma', 'ion'],
+   cruiser: ['pulse', 'plasma', 'ion', 'beam', 'rail'],
+   capital: ['torpedo', 'beam', 'rail', 'plasma'],
++  destroyer: ['rail', 'beam', 'plasma'],
+ };
+ 
+ // ---------- Levels ----------
+diff --git a/src/lib/tactics.ts b/src/lib/tactics.ts
+index db213bb..de2d46d 100644
+--- a/src/lib/tactics.ts
++++ b/src/lib/tactics.ts
+@@ -57,8 +57,9 @@ export function standoffRange(cls: Exclude<ShipClass, 'fighter'>, own: Munition[
+ }
+ 
+ // ---------- Arcs ----------
+-export type Arc = 'nose' | 'forward' | 'broadside';
+-export const ARC: Record<ShipClass, Arc> = { fighter: 'nose', cruiser: 'forward', capital: 'broadside' };
++export type Arc = 'nose' | 'forward' | 'broadside' | 'turret';
++/** The destroyer's three turrets bear all round (claude/destroyer-a8ff7d). */
++export const ARC: Record<ShipClass, Arc> = { fighter: 'nose', cruiser: 'forward', capital: 'broadside', destroyer: 'turret' };
+ const angleBetween = (a: V3, b: V3) => Math.acos(Math.max(-1, Math.min(1, dot(unit(a), unit(b)))));
+ /**
+  * Do a ship's guns bear on a direction? Fighters' guns point down the nose (the fire cone is checked apart);
+@@ -68,6 +69,7 @@ export function bears(arc: Arc, fwd: V3, to: V3, noseCone = 0.09): boolean {
+   const a = angleBetween(fwd, to);
+   if (arc === 'nose') return a <= noseCone;
+   if (arc === 'forward') return a <= 1.2;
++  if (arc === 'turret') return true;
+   return Math.abs(a - Math.PI / 2) <= 1.0;
+ }
+ /** The heading that puts a target square on the beam: perpendicular to the line to it, nearest the current heading. */
+@@ -171,7 +173,7 @@ export function avoidBodies(pos: V3, vel: V3, occ: Occluder[], margin: number, l
+ }
+ 
+ // ---------- The fleet ----------
+-export type Role = 'line' | 'flank' | 'screen' | 'strike';
++export type Role = 'line' | 'flank' | 'screen' | 'strike' | 'hunt';
+ export interface FleetShip { id: number; cls: ShipClass; pos: V3; standoff: number }
+ export interface FleetSlot { role: Role; slot: V3 | null }
+ 
+@@ -194,6 +196,8 @@ export function fleetPlan(ships: FleetShip[], player: V3, anchor: V3, sun: V3 |
+   let flank = 0;
+   for (const s of ships) {
+     if (s.cls === 'capital') out.set(s.id, { role: 'line', slot: add(player, scale(line, s.standoff)) });
++    // A destroyer hunts on its own: no slot, it circles the player (warshipAI).
++    else if (s.cls === 'destroyer') out.set(s.id, { role: 'hunt', slot: null });
+     else if (s.cls === 'cruiser') {
+       const side = flank % 2 === 0 ? 1 : -1;
+       const tier = Math.floor(flank / 2);
+diff --git a/src/lib/warshipAI.test.ts b/src/lib/warshipAI.test.ts
+index 624e19c..7a47939 100644
+--- a/src/lib/warshipAI.test.ts
++++ b/src/lib/warshipAI.test.ts
+@@ -89,3 +89,58 @@ describe('capital ship', () => {
+     expect(len(add(o.wantVel, scale(o.wantVel, 0)))).toBeGreaterThan(0);
+   });
+ });
++
++describe('destroyer (fast hunter)', () => {
++  const D = { cls: 'destroyer' as const, speed: 46, accel: 20, standoff: 120 };
++  it('runs in at full speed, then circles the player at speed, outside its nose', () => {
++    const v = view({ ...D, target: { pos: [0, 0, 0], vel: [0, 0, 0], fwd: [0, 0, 1] } });
++    const first = warshipThink(v, newWarshipMem());
++    expect(len(first.wantVel)).toBeCloseTo(46, 6); // 300 out: straight in, flat out
++    const mem = newWarshipMem();
++    const b = { pos: v.pos, vel: v.vel, fwd: v.fwd };
++    let inNose = 0, n = 0, dMin = Infinity, dMax = 0;
++    for (let t = 0; t < 40; t += 1 / 30) {
++      const o = warshipThink({ ...v, t, pos: b.pos, vel: b.vel, fwd: b.fwd }, mem);
++      flyFree(b, o.wantVel, o.face, { speed: 46, accel: 20, turn: 1.1 }, 1 / 30);
++      if (t > 20) {
++        n++;
++        const d = len(b.pos);
++        dMin = Math.min(dMin, d); dMax = Math.max(dMax, d);
++        if (dot(unit(b.pos), [0, 0, 1]) > Math.cos(0.3)) inNose++;
++      }
++    }
++    expect(dMax).toBeLessThan(120 * 1.3); // it stays in its guns' reach …
++    expect(dMin).toBeGreaterThan(20); // … without ramming
++    expect(inNose / n).toBeLessThan(0.15); // and rarely sits in front of the player's guns
++  });
++  it('out-runs and out-turns the cruiser and the capital ship', async () => {
++    const { CLASS } = await import('./enemyArms');
++    for (const t of ['cruiser', 'capital'] as const) {
++      expect(CLASS.destroyer.speed).toBeGreaterThan(CLASS[t].speed);
++      expect(CLASS.destroyer.turn).toBeGreaterThan(CLASS[t].turn);
++      expect(CLASS.destroyer.accel).toBeGreaterThan(CLASS[t].accel);
++    }
++    expect(CLASS.destroyer.size).toBeGreaterThan(CLASS.cruiser.size);
++    expect(CLASS.destroyer.size).toBeLessThan(CLASS.capital.size);
++  });
++});
++
++describe('destroyer firepower (rolled fits)', () => {
++  it('out-guns the cruiser and sits slightly under the capital ship, averaged over every nation and 40 rolls', async () => {
++    const { rollFit, levelOf } = await import('./enemyArms');
++    const { MUNITIONS } = await import('./munitions');
++    const dps = (cls: 'capital' | 'cruiser' | 'destroyer') => {
++      let sum = 0, n = 0;
++      for (const nation of ['earth', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn']) for (let s = 0; s < 40; s++) {
++        const f = rollFit(nation, cls, levelOf(nation, cls), s);
++        sum += f.weapons.reduce((a, id) => { const m = MUNITIONS[id]; return a + (m.rate > 0 ? m.damage * m.rate : m.damage); }, 0);
++        n++;
++      }
++      return sum / n;
++    };
++    const [cap, des, cru] = [dps('capital'), dps('destroyer'), dps('cruiser')];
++    console.log(`enemy-ai rolled dps: capital ${cap.toFixed(1)}, destroyer ${des.toFixed(1)}, cruiser ${cru.toFixed(1)}`);
++    expect(des).toBeGreaterThan(cru);
++    expect(des).toBeLessThan(cap);
++  });
++});
+diff --git a/src/lib/warshipAI.ts b/src/lib/warshipAI.ts
+index 4701650..2345691 100644
+--- a/src/lib/warshipAI.ts
++++ b/src/lib/warshipAI.ts
+@@ -12,7 +12,7 @@
+  * Pure; the scene flies the order with flyFree and keeps it out of bodies with avoidBodies.
+  */
+ import type { V3 } from './nav';
+-import { add, dist, len, scale, sub, unit } from './nav';
++import { add, cross, dist, dot, len, scale, sub, unit } from './nav';
+ import type { Knobs } from './aiKnobs';
+ import { AI } from './aiKnobs';
+ import type { Occluder } from './tactics';
+@@ -21,14 +21,15 @@ import { arrive } from './pilot';
+ 
+ export type WarshipMode = 'close' | 'hold' | 'cover';
+ export interface WarshipView {
+-  cls: 'cruiser' | 'capital';
++  cls: 'cruiser' | 'capital' | 'destroyer';
+   t: number;
+   pos: V3;
+   vel: V3;
+   fwd: V3;
+   id: number;
+   r: number; // its hit radius
+-  target: { pos: V3; vel: V3 };
++  /** The player; `fwd` (its nose) lets a destroyer stay out of its guns. */
++  target: { pos: V3; vel: V3; fwd?: V3 };
+   shield: number; // 0..1 of full
+   standoff: number;
+   slot: V3 | null; // from the fleet's plan
+@@ -77,6 +78,21 @@ export function warshipThink(v: WarshipView, mem: WarshipMem, knobs: Knobs = AI)
+     goal = mem.cover;
+     wantVel = arrive(v.pos, goal, v.speed, v.accel);
+     face = v.cls === 'capital' ? broadsideFace(v.fwd, toP) : unit(toP);
++  } else if (v.cls === 'destroyer') {
++    // Hunter: run in at full speed, then circle the player at speed with its turrets on it, turning away from the
++    // player's nose; it does not hold a slot. Agility is its armour (claude/destroyer-a8ff7d DESTROYER.md).
++    const r = v.standoff * knobs.huntOrbit;
++    const top = v.speed * knobs.huntSpeed;
++    if (d > v.standoff * 1.3) wantVel = scale(unit(toP), top);
++    else {
++      const out = unit(scale(toP, -1));
++      const nose = v.target.fwd && len(v.target.fwd) > 1e-6 ? unit(v.target.fwd) : len(v.target.vel) > 1e-6 ? unit(v.target.vel) : scale(out, -1);
++      const axis = unit(cross(nose, out));
++      let tangent = unit(cross(len(axis) > 1e-6 ? axis : ([0, 1, 0] as V3), out));
++      if (dot(tangent, nose) > 0) tangent = scale(tangent, -1);
++      wantVel = scale(unit(add(tangent, scale(out, (1.5 * (r - d)) / Math.max(r, 1e-6)))), top);
++    }
++    face = unit(len(wantVel) > 1e-6 ? wantVel : toP);
+   } else if (v.cls === 'capital') {
+     // Circle the player at standoff, broadside on; drift toward the slot as it goes.
+     const ring = orbitVel(v.pos, v.target.pos, v.standoff, v.speed * 0.6, mem.sense);

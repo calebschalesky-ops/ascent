@@ -1,0 +1,25 @@
+/* Flight in air: the readout under the HUD, the pull-up warning, the banner in and out, the heat of entry. */
+.air-hud {
+  position: absolute; z-index: 2; right: 8px; top: 118px; display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+  font-family: var(--body); font-size: .85rem; color: #d8e6ff; text-shadow: 0 1px 3px #000; pointer-events: none;
+}
+.air-k { font-family: var(--display); color: var(--gold-soft); margin-right: 4px; }
+.air-note { color: #ffd9a0; }
+.air-hot { color: #ff9a5a; }
+.air-warn {
+  position: absolute; z-index: 3; left: 50%; top: 62%; transform: translateX(-50%); pointer-events: none;
+  font-family: var(--display); font-size: 1.5rem; letter-spacing: .12em; color: #ff5a3c;
+  text-shadow: 0 0 14px rgba(255, 70, 40, .8), 0 2px 4px #000; animation: air-blink .5s steps(2, end) infinite;
+}
+@keyframes air-blink { 50% { opacity: .25; } }
+.air-banner {
+  position: absolute; z-index: 3; left: 50%; top: 30%; transform: translateX(-50%); pointer-events: none; width: max-content; max-width: 90%;
+  font-family: var(--display); font-size: 1.3rem; color: #e8f2ff; letter-spacing: .05em;
+  text-shadow: 0 0 16px rgba(120, 170, 255, .7), 0 2px 4px #000; animation: banner 3.2s ease-in-out forwards;
+}
+.heat-wash {
+  position: absolute; inset: 0; z-index: 1; display: none; opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 120, 40, 0) 45%, rgba(255, 110, 30, .35) 75%, rgba(255, 220, 160, .55) 100%);
+  mix-blend-mode: screen;
+}
+@media (max-width: 600px) { .air-hud { top: 150px; font-size: .78rem; } .air-warn { font-size: 1.2rem; } }

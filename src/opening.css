@@ -1,0 +1,284 @@
+/*
+ * The opening (new game: people, pilot, ship), the shakedown flight's coach, the launch card and the goal line.
+ * Drawn in the graphics branch's glass look (claude/graphics-e638ff, styles-glass.css: dark translucent panels with a
+ * hairline edge, sans type, cyan readouts, amber actions), scoped to these screens so nothing else changes until that
+ * branch is merged. Works at 375 px.
+ */
+.opening, .shakedown, .launch-card, .goal-line, .raid-card, .ph-who, .title-menu {
+  /* aliases of the shared tokens in styles.css :root (look-unify); this file no longer keeps its own copy */
+  --g-glass: var(--glass);
+  --g-strong: rgba(9, 12, 26, .88);
+  --g-edge: var(--edge);
+  --g-hot: var(--edge-hot);
+  --g-text: var(--ink);
+  --g-dim: var(--ink-soft);
+  --g-cyan: var(--cyan);
+  --g-amber: var(--amber);
+  --g-sans: var(--body);
+  --g-display: var(--display);
+}
+.opening .btn, .shakedown .btn, .launch-card .btn {
+  background: linear-gradient(180deg, #ffd48a, #f2a83e); color: #1a1206; border: 0; border-radius: 10px;
+  font-family: var(--g-display); font-weight: 600; letter-spacing: .03em;
+  box-shadow: 0 0 0 1px rgba(255, 210, 140, .5), 0 6px 18px rgba(242, 168, 62, .25);
+}
+.opening .btn.ghost, .shakedown .btn.ghost, .launch-card .btn.ghost { background: rgba(255, 255, 255, .05); color: var(--g-text); box-shadow: inset 0 0 0 1px var(--g-edge); }
+.opening .btn:disabled, .shakedown .btn:disabled { opacity: .45; cursor: default; filter: none; }
+.opening .btn:not(:disabled):hover, .shakedown .btn:not(:disabled):hover, .launch-card .btn:hover { filter: brightness(1.12); }
+.opening .btn.small, .shakedown .btn.small { padding: 5px 10px; font-size: .82rem; }
+.opening .field { background: rgba(255, 255, 255, .06); border: 1px solid var(--g-edge); color: var(--g-text); border-radius: 8px; padding: 7px 9px; font: inherit; min-width: 0; }
+.opening select.field option { background: #0c1226; color: var(--g-text); }
+.opening .muted, .launch-card .muted { color: var(--g-dim); opacity: 1; }
+.opening .small { font-size: .82rem; }
+.op-kicker { margin: 0; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--g-cyan); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---------- the opening's frame ---------- */
+.opening {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; overflow-x: hidden; color: var(--g-text); font-family: var(--g-sans);
+  background:
+    radial-gradient(ellipse at 15% -10%, color-mix(in srgb, var(--c) 45%, transparent), transparent 55%),
+    radial-gradient(ellipse at 100% 110%, rgba(90, 60, 160, .35), transparent 50%),
+    linear-gradient(180deg, #070a1c, #03050c);
+  transition: background .4s;
+}
+.op-frame { max-width: 1180px; min-height: 100%; margin: 0 auto; padding: 14px 16px 0; display: flex; flex-direction: column; box-sizing: border-box; }
+.op-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.op-back { background: none; border: 0; color: var(--g-text); font: 600 .95rem var(--g-display); cursor: pointer; padding: 6px 8px 6px 0; }
+.op-back:hover { color: var(--g-amber); }
+.op-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 0 auto; padding: 0; font: .8rem var(--g-display); letter-spacing: .06em; }
+.op-steps li > * { display: block; padding: 5px 11px; border-radius: 99px; box-shadow: inset 0 0 0 1px var(--g-edge); color: var(--g-dim); background: none; border: 0; font: inherit; }
+.op-steps li.done button { color: var(--g-text); cursor: pointer; }
+.op-steps li.done button:hover { box-shadow: inset 0 0 0 1px var(--g-hot); }
+.op-steps li.on > * { background: var(--g-amber); color: #1a1206; box-shadow: none; font-weight: 600; }
+.op-title { margin: 14px 0 10px; font: 300 1.9rem/1.15 var(--g-display); letter-spacing: .12em; text-transform: uppercase;
+  background: linear-gradient(90deg, #9fe3ff, #ffffff 45%, #ffcf86); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.op-body { flex: 1; }
+.op-foot {
+  position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  margin: 14px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--g-strong); box-shadow: 0 -1px 0 var(--g-edge); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.op-foot-btns { display: flex; gap: 8px; margin-left: auto; }
+.op-problem { color: #ffb4a6; font-size: .9rem; }
+
+/* panels */
+.op-detail, .op-portrait, .op-form, .op-hangar {
+  border-radius: 14px; background: linear-gradient(160deg, rgba(40, 60, 120, .22), rgba(10, 14, 30, 0) 55%), var(--g-glass);
+  box-shadow: inset 0 0 0 1px var(--g-edge), 0 18px 50px rgba(0, 0, 0, .4);
+}
+
+/* ---------- 1: people ---------- */
+.op-faction { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 14px; align-items: start; }
+.op-peoples { display: flex; flex-direction: column; gap: 6px; }
+.op-people {
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 7px; border: 0; border-radius: 12px; cursor: pointer; text-align: left;
+  background: var(--g-glass); color: var(--g-text); box-shadow: inset 0 0 0 1px var(--g-edge), inset 3px 0 0 var(--c); font-family: var(--g-sans);
+}
+.op-people:hover { box-shadow: inset 0 0 0 1px var(--g-hot), inset 3px 0 0 var(--c); }
+.op-people.on { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), rgba(10, 14, 30, .7)); box-shadow: inset 0 0 0 1px var(--g-hot), 0 0 18px color-mix(in srgb, var(--c) 45%, transparent); }
+.op-emblem { flex: none; width: 40px; height: 40px; }
+.op-people-text { display: flex; flex-direction: column; min-width: 0; }
+.op-people-home { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--g-dim); }
+.op-people strong { font: 600 1.05rem var(--g-display); letter-spacing: .02em; }
+.op-detail { padding: 14px 16px 16px; }
+.op-detail-head h2 { margin: 2px 0 0; font: 300 2rem var(--g-display); letter-spacing: .08em; }
+.op-pitch { margin: 6px 0 12px; font-size: 1.02rem; line-height: 1.45; max-width: 64ch; }
+.op-detail-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.op-facts { margin: 0; display: grid; gap: 8px; }
+.op-facts div { display: grid; grid-template-columns: 7.5em 1fr; gap: 8px; }
+.op-facts dt { font: .7rem var(--g-display); letter-spacing: .12em; text-transform: uppercase; color: var(--g-dim); padding-top: .2em; }
+.op-facts dd { margin: 0; font-size: .9rem; line-height: 1.4; }
+
+/* the hangar view */
+.ship-viewer {
+  position: relative; height: 300px; border-radius: 12px; overflow: hidden; cursor: grab; touch-action: pan-y;
+  background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--c, #3f7fd0) 28%, transparent), transparent 60%),
+    linear-gradient(180deg, #0b1124, #04060e);
+  box-shadow: inset 0 0 0 1px var(--g-edge);
+}
+.ship-viewer:active { cursor: grabbing; }
+.ship-viewer canvas { display: block; width: 100%; height: 100%; }
+.ship-viewer.no-gl::after { content: 'This browser cannot draw the ship (no WebGL).'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--g-dim); font-size: .85rem; }
+
+/* ---------- 2: pilot ---------- */
+.op-pilot { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.op-portrait { margin: 0; padding: 10px; position: sticky; top: 10px; }
+.op-portrait .codex-art { border-radius: 10px; }
+.op-portrait figcaption { display: flex; flex-direction: column; gap: 2px; padding: 8px 4px 2px; }
+.op-portrait figcaption strong { font: 600 1.15rem var(--g-display); }
+.op-form { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.op-field { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.op-field legend, .op-label { padding: 0; font: .74rem var(--g-display); letter-spacing: .12em; text-transform: uppercase; color: var(--g-dim); margin-bottom: 6px; }
+.op-field legend .muted { text-transform: none; letter-spacing: .02em; color: var(--g-text); }
+.op-name-row { display: flex; gap: 8px; }
+.op-name-row .field, .op-name .field { flex: 1; font-size: 1rem; }
+.op-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.op-swatch {
+  width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; background: var(--s);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 2px rgba(0, 0, 0, .4);
+}
+.op-swatch.on { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px #04060e, 0 0 0 4px var(--g-amber); }
+.op-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.op-option {
+  display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 9px 11px 9px 14px; border: 0; border-radius: 10px; cursor: pointer;
+  background: rgba(255, 255, 255, .04); color: var(--g-text); font-family: var(--g-sans); box-shadow: inset 0 0 0 1px var(--g-edge), inset 5px 0 0 var(--s);
+}
+.op-option span { font-size: .8rem; color: var(--g-dim); line-height: 1.35; }
+.op-option.on { background: rgba(255, 196, 107, .12); box-shadow: inset 0 0 0 1px var(--g-amber), inset 5px 0 0 var(--s); }
+.op-check { display: flex; align-items: center; gap: 8px; font-size: .95rem; cursor: pointer; }
+.op-check input { width: 18px; height: 18px; accent-color: var(--g-amber); }
+.op-note { margin: 0; line-height: 1.4; }
+
+/* ---------- 3: ship ---------- */
+.op-ship { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.op-hangar { padding: 10px; position: sticky; top: 10px; }
+.op-hangar .ship-viewer { height: 380px; }
+.op-hangar-name { margin: 10px 4px 2px; font: 1.15rem var(--g-display); }
+.op-hangar-name .muted { font-size: .85rem; }
+.op-hangar-stats { margin: 0 4px; color: var(--g-cyan); font-variant-numeric: tabular-nums; }
+.op-hint-drag { margin: 4px 4px 0; }
+.op-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
+.op-chip { padding: 4px 10px; border: 0; border-radius: 99px; cursor: pointer; background: rgba(255, 255, 255, .05); color: var(--g-text); font: .8rem var(--g-sans); box-shadow: inset 0 0 0 1px var(--g-edge); }
+.op-chip.on { background: var(--g-amber); color: #1a1206; box-shadow: none; }
+.op-seg { display: flex; border-radius: 10px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--g-edge); }
+.op-seg button { flex: 1; padding: 8px 6px; border: 0; background: none; color: var(--g-text); font: .88rem var(--g-display); cursor: pointer; }
+.op-seg button + button { box-shadow: -1px 0 0 var(--g-edge); }
+.op-seg button.on { background: var(--g-amber); color: #1a1206; font-weight: 600; }
+.op-slot { display: grid; grid-template-columns: 8.5em minmax(0, 1fr); gap: 2px 10px; align-items: center; margin-bottom: 8px; }
+.op-slot-kind { font-size: .9rem; }
+.op-slot-line { grid-column: 2; }
+.op-fit-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.op-warn { color: var(--g-amber); }
+
+@media (max-width: 860px) {
+  .op-faction { grid-template-columns: minmax(0, 1fr); }
+  .op-peoples { flex-direction: row; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .op-peoples::-webkit-scrollbar { display: none; }
+  .op-people { flex: none; }
+  .op-detail-grid, .op-pilot, .op-ship { grid-template-columns: minmax(0, 1fr); }
+  .op-portrait, .op-hangar { position: static; }
+  .op-portrait { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
+  .ship-viewer { height: 240px; }
+  .op-hangar .ship-viewer { height: 260px; }
+}
+@media (max-width: 420px) {
+  .op-title { font-size: 1.35rem; letter-spacing: .08em; margin: 10px 0 8px; }
+  .op-steps { margin-left: 0; width: 100%; }
+  .op-steps li { flex: 1; }
+  .op-steps li > * { text-align: center; padding: 5px 4px; }
+  .op-detail { padding: 12px; }
+  .op-detail-head h2 { font-size: 1.6rem; }
+  .op-facts div { grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .op-slot { grid-template-columns: minmax(0, 1fr); }
+  .op-slot-line { grid-column: 1; }
+  .op-foot-btns { width: 100%; }
+  .op-foot-btns .btn { flex: 1; padding-left: 8px; padding-right: 8px; }
+  .op-form { padding: 12px; }
+}
+
+/* ---------- the shakedown flight's coach ---------- */
+.shakedown {
+  /* Above the hotbar's row, on the left: the coach must not cover the slots it is teaching (player notes 5.3). */
+  position: absolute; z-index: 60; left: 12px; bottom: 112px; width: min(360px, calc(100% - 24px)); box-sizing: border-box;
+  padding: 10px 14px 12px; border-radius: 14px; color: var(--g-text); font-family: var(--g-sans);
+  background: linear-gradient(160deg, rgba(40, 60, 120, .3), rgba(10, 14, 30, 0) 55%), var(--g-strong);
+  box-shadow: inset 0 0 0 1px var(--g-hot), 0 12px 36px rgba(0, 0, 0, .55); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+.shakedown.paused { display: none; }
+.shakedown.over-nav { position: fixed; left: auto; right: 12px; top: auto; bottom: 44px; width: min(360px, calc(100% - 24px)); }
+.shakedown.done { box-shadow: inset 0 0 0 1px #5cff8a, 0 0 24px rgba(92, 255, 138, .35); }
+.sk-head { display: flex; align-items: center; justify-content: space-between; }
+.sk-kicker { font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--g-cyan); }
+.sk-min { background: none; border: 0; color: var(--g-dim); font-size: 1rem; cursor: pointer; padding: 0 2px; }
+.sk-title { margin: 4px 0 4px; font: 600 1.15rem var(--g-display); }
+.shakedown.done .sk-title { color: #8dffad; }
+.sk-how { margin: 0 0 8px; font-size: .92rem; line-height: 1.4; }
+.sk-dots { display: flex; gap: 4px; list-style: none; margin: 0 0 8px; padding: 0; }
+.sk-dots li { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+.sk-dots li.on { background: var(--g-amber); }
+.sk-dots li.done { background: #5cff8a; }
+.sk-btns, .sk-ask { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.sk-btns { justify-content: space-between; }
+.sk-ask span { flex-basis: 100%; font-size: .85rem; }
+.shakedown.min .sk-title { margin-bottom: 0; font-size: 1rem; }
+@media (max-width: 600px) {
+  /* On a phone the flight view's corners hold the buttons and the steering thumb: the coach sits at the top, below the
+     chips. */
+  .flight-wrap .shakedown:not(.over-nav) { left: 12px; bottom: auto; top: 46px; padding: 8px 12px 10px; }
+  .sk-how { font-size: .86rem; }
+}
+
+/* ---------- the launch ---------- */
+.launch-backdrop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at center, rgba(5, 8, 22, .45), rgba(2, 3, 10, .85)); }
+.launch-card {
+  display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; width: min(640px, 100%); box-sizing: border-box; padding: 16px; border-radius: 16px;
+  color: var(--g-text); font-family: var(--g-sans); background: linear-gradient(160deg, rgba(40, 60, 120, .3), rgba(10, 14, 30, 0) 55%), var(--g-strong);
+  box-shadow: inset 0 0 0 1px var(--g-hot), 0 20px 60px rgba(0, 0, 0, .6); max-height: calc(100vh - 32px); overflow-y: auto;
+}
+.launch-portrait .codex-art, .launch-portrait .pilot-head { border-radius: 10px; }
+.launch-portrait .pilot-head { display: block; width: 100%; height: auto; }
+.launch-card h2 { margin: 4px 0 6px; font: 300 1.7rem var(--g-display); letter-spacing: .06em; }
+.launch-card p { margin: 0 0 10px; line-height: 1.45; }
+.launch-task { color: var(--g-cyan); }
+.launch-task strong { color: var(--g-text); }
+.launch-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+@media (max-width: 520px) {
+  .launch-card { grid-template-columns: 1fr; }
+  .launch-portrait { width: 110px; }
+  .launch-btns .btn { flex: 1; }
+}
+
+/* ---------- the goal line, in flight ---------- */
+.goal-line {
+  position: absolute; z-index: 3; top: 46px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: baseline; white-space: nowrap;
+  padding: 5px 12px; border-radius: 99px; color: var(--g-text); font: .82rem var(--g-display); background: var(--g-glass);
+  box-shadow: inset 0 0 0 1px var(--g-edge); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); pointer-events: none; max-width: calc(100% - 24px); overflow: hidden;
+}
+.gl-kicker { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--g-cyan); }
+.gl-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.gl-count { color: var(--g-amber); font-variant-numeric: tabular-nums; }
+.goal-line.done { box-shadow: inset 0 0 0 1px #5cff8a; }
+.goal-line.done .gl-kicker { color: #8dffad; }
+/* On a phone the top-right readout fills the width the pill would sit in: it goes under the pilot card. */
+@media (max-width: 600px) { .goal-line { top: 340px; left: 8px; transform: none; max-width: calc(100% - 16px); } .flight-wrap:has(.arrival) .goal-line { max-width: 120px; } }
+
+/* ---------- the raid card (GP-02): the raiders' captain on the channel ---------- */
+.raid-card {
+  position: absolute; z-index: 4; top: 84px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center;
+  width: min(460px, calc(100% - 32px)); padding: 10px 14px; border-radius: 12px; color: var(--g-text); font-family: var(--g-sans); background: var(--g-strong);
+  box-shadow: inset 0 0 0 1px #ff6b4a, 0 12px 36px rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); pointer-events: none;
+}
+.raid-card h3 { margin: 2px 0 4px; font: 600 1rem var(--g-display); color: #ffb39e; }
+.raid-card p { margin: 0; font-size: .82rem; }
+.raid-card .op-kicker { color: #ff8a6a; }
+.raid-portrait { flex: none; width: 54px; height: 68px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 107, 74, .6); }
+.raid-portrait .pilot-head { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+/* ---------- the pilot in the HUD ---------- */
+.ph-who { display: flex; align-items: center; gap: 8px; }
+.ph-portrait { flex: none; width: 34px; height: 43px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2); }
+.ph-portrait .pilot-head { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.ph-names { display: flex; flex-direction: column; min-width: 0; }
+.ph-sub { font-size: .72rem; color: #b8c4e0; }
+
+/* ---------- the title menu: the door into the opening, in the same glass ---------- */
+.title-menu { background: radial-gradient(ellipse at 50% 35%, rgba(90, 60, 160, .35), rgba(20, 40, 90, .2) 45%, rgba(3, 4, 14, .2) 75%); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--g-edge); }
+.title-menu .game-menu.parchment {
+  color: var(--g-text); font-family: var(--g-sans); border-radius: 16px; border: 0;
+  background: linear-gradient(160deg, rgba(40, 60, 120, .3), rgba(10, 14, 30, 0) 55%), var(--g-strong);
+  box-shadow: inset 0 0 0 1px var(--g-edge), inset 0 1px 0 rgba(255, 255, 255, .06), 0 18px 50px rgba(0, 0, 0, .55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+}
+.title-menu .menu-title { font: 300 1.9rem var(--g-display); letter-spacing: .28em; text-transform: uppercase;
+  background: linear-gradient(90deg, #9fe3ff, #ffffff 45%, #ffcf86); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.title-menu .menu-title::before, .title-menu .menu-title::after { content: none; }
+.title-menu .btn { background: linear-gradient(180deg, #ffd48a, #f2a83e); color: #1a1206; border: 0; border-radius: 10px; font-family: var(--g-display); font-weight: 600; letter-spacing: .04em;
+  box-shadow: 0 0 0 1px rgba(255, 210, 140, .5), 0 6px 18px rgba(242, 168, 62, .25); }
+.title-menu .btn.ghost { background: rgba(255, 255, 255, .05); color: var(--g-text); box-shadow: inset 0 0 0 1px var(--g-edge); }
+.title-menu .btn:hover { filter: brightness(1.12); }
+.title-menu .muted, .title-menu .menu-note { color: var(--g-dim); opacity: 1; }
+.title-menu h2:not(.menu-title) { font: 500 1.1rem var(--g-display); letter-spacing: .2em; text-transform: uppercase; }
+.title-menu .field, .title-menu .seg { color: var(--g-text); border-color: var(--g-edge); }
+@media (max-width: 420px) { .title-menu .menu-title { font-size: 1.45rem; letter-spacing: .2em; } }

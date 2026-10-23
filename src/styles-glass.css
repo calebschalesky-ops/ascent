@@ -1,0 +1,131 @@
+/*
+ * The glass interface (graphics overhaul, 2026-10-18). Loaded after styles.css and only overrides it, so the
+ * class names and layout stay as they were: dark translucent panels with a hairline edge, clean sans type,
+ * cool cyan for readouts and a warm amber for what you act on. Readable at 375 px.
+ */
+/* Tokens live in styles.css :root (look-unify). */
+
+html, body { background: var(--night); color: var(--hud); }
+body { font-size: 16px; letter-spacing: .005em; }
+h1, h2, h3 { font-weight: 600; letter-spacing: .02em; }
+
+.starfield { background: radial-gradient(ellipse at 30% 20%, #1b1440 0%, #0a0f26 35%, var(--night) 75%); }
+
+/* ---------- panels ---------- */
+.parchment {
+  background: linear-gradient(160deg, rgba(40, 60, 120, .28), rgba(10, 14, 30, 0) 55%), var(--glass-strong);
+  color: var(--ink);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--edge), inset 0 1px 0 rgba(255, 255, 255, .06), 0 18px 50px rgba(0, 0, 0, .55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+.muted { color: var(--ink-soft); opacity: 1; }
+
+.btn {
+  background: linear-gradient(180deg, #ffd48a, #f2a83e); color: #1a1206; border: 0; border-radius: 10px;
+  font-family: var(--display); font-weight: 600; font-size: .95rem; letter-spacing: .04em;
+  box-shadow: 0 0 0 1px rgba(255, 210, 140, .5), 0 6px 18px rgba(242, 168, 62, .25);
+}
+.btn.ghost { background: rgba(255, 255, 255, .04); color: var(--ink); box-shadow: inset 0 0 0 1px var(--edge); }
+.btn.ghost:hover, .btn:hover { filter: brightness(1.12); }
+/* Disabled reads as an empty glass button, not as amber at half strength (which turns brown on the dark panel). */
+.btn:disabled, .btn:disabled:hover { background: rgba(255, 255, 255, .03); color: var(--hud-dim); box-shadow: inset 0 0 0 1px var(--edge); opacity: .7; filter: none; }
+.btn.danger { color: var(--danger); box-shadow: inset 0 0 0 1px rgba(255, 106, 85, .45); }
+.field { background: rgba(255, 255, 255, .05); border-color: var(--edge); color: var(--ink); }
+.check-lbl input, .fs-row input[type=range] { accent-color: var(--amber); }
+
+.seg { border-color: var(--edge); border-radius: 10px; }
+.parchment .seg { border-color: var(--edge); }
+.seg button { font-family: var(--display); font-size: .9rem; color: var(--ink); }
+.seg button[aria-selected='true'], .parchment .seg button[aria-selected='true'] { background: var(--amber); color: #1a1206; }
+
+/* ---------- flight view ---------- */
+.voyage, .main-menu-wrap { box-shadow: inset 0 0 0 1px var(--edge); border-radius: 14px; }
+.main-menu-wrap { background: radial-gradient(ellipse at 50% 35%, rgba(90, 60, 160, .35), rgba(20, 40, 90, .2) 45%, rgba(3, 4, 14, .2) 75%); }
+
+.chips button {
+  border: 0; border-radius: 99px; background: var(--glass); color: var(--hud); font-family: var(--display); font-size: .85rem;
+  box-shadow: inset 0 0 0 1px var(--edge), inset 3px 0 0 var(--c, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.chips button.on { background: var(--amber); color: #1a1206; box-shadow: 0 0 14px rgba(255, 196, 107, .45); }
+
+.hud { font-family: var(--display); color: var(--hud); font-size: .9rem; letter-spacing: .04em; text-shadow: 0 1px 6px rgba(0, 0, 0, .9); }
+.hud-zone { text-transform: uppercase; font-size: .78rem; letter-spacing: .18em; color: var(--cyan); }
+.hud-speed { font-weight: 600; }
+.hud-sub { font-family: var(--display); font-size: .78rem; color: var(--hud-dim); font-variant-numeric: tabular-nums; }
+.hud-weapon { color: var(--amber); }
+
+.banner-title {
+  font-family: var(--display); font-weight: 300; font-size: 1.5rem; letter-spacing: .32em; text-transform: uppercase; color: #fff;
+  text-shadow: 0 0 22px rgba(127, 214, 255, .75), 0 2px 6px #000;
+}
+
+.reticle { border: 1px solid rgba(160, 220, 255, .55); box-shadow: 0 0 8px rgba(127, 214, 255, .25); }
+.reticle::after { background: rgba(200, 240, 255, .9); }
+.target-ring { border: 1.5px solid var(--amber); box-shadow: 0 0 12px rgba(255, 196, 107, .6), inset 0 0 8px rgba(255, 196, 107, .25); }
+.target-label { font-family: var(--display); font-size: .8rem; letter-spacing: .06em; color: #ffe2b0; }
+.target-arrow { color: var(--amber); text-shadow: 0 0 10px rgba(255, 196, 107, .8); }
+.aim-dot { border-color: rgba(160, 220, 255, .9); box-shadow: 0 0 8px rgba(127, 214, 255, .6); }
+.lock-mark { border-color: var(--danger); box-shadow: 0 0 10px rgba(255, 106, 85, .75); }
+
+.menu-btn, .nav-btns button, .rb-btn, .fbtn, .map-tools button {
+  border: 0; background: var(--glass); color: var(--hud); font-family: var(--display);
+  box-shadow: inset 0 0 0 1px var(--edge); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.menu-btn, .nav-btns button { font-size: .82rem; letter-spacing: .04em; border-radius: 10px; }
+.fbtn { border-radius: 12px; font-size: .88rem; font-weight: 600; letter-spacing: .04em; }
+.fbtn.on { background: var(--cyan); color: #04121c; box-shadow: 0 0 14px rgba(127, 214, 255, .5); }
+.fbtn.stop { box-shadow: inset 0 0 0 1px rgba(255, 106, 85, .55); }
+.fbtn.fire { box-shadow: inset 0 0 0 1px rgba(255, 106, 85, .7), 0 0 12px rgba(255, 90, 60, .25); color: #ffd0c4; }
+.rb-btn { background: var(--amber); color: #1a1206; box-shadow: none; }
+
+.throttle-track { border: 0; border-radius: 14px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--edge); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.throttle-fill { background: linear-gradient(to top, rgba(60, 140, 255, .55), #7fd6ff 70%, #e8f8ff); box-shadow: 0 0 16px rgba(127, 214, 255, .5); }
+.throttle-label { font-family: var(--display); font-weight: 600; color: #fff; }
+
+.minimap { box-shadow: 0 0 0 1px var(--edge-hot), 0 0 24px rgba(80, 160, 255, .2), 0 6px 18px rgba(0, 0, 0, .5); }
+.route-bar { background: var(--glass); border: 0; box-shadow: inset 0 0 0 1px var(--edge); color: var(--hud); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.route-bar strong { font-family: var(--display); font-weight: 600; color: var(--cyan); }
+.hint { color: var(--hud-dim); font-family: var(--display); font-size: .72rem; letter-spacing: .02em; }
+.joy-hint { color: var(--hud-dim); font-family: var(--display); }
+.joy-float::before { border-color: rgba(160, 220, 255, .45); background: radial-gradient(circle, rgba(20, 40, 80, .2), rgba(5, 8, 20, .55)); }
+.joy-float-knob { background: radial-gradient(circle at 35% 35%, #ffffff, #7fd6ff 55%, #1d5d9a); box-shadow: 0 0 16px rgba(127, 214, 255, .6); }
+
+.enter-btn { border: 0; background: linear-gradient(180deg, #ffd48a, #f2a83e); color: #1a1206; font-family: var(--display); font-weight: 600; letter-spacing: .04em; box-shadow: 0 0 22px rgba(242, 168, 62, .5); }
+
+/* ---------- cards and menus ---------- */
+.sheet-head {
+  color: #fff; border-bottom: 1px solid var(--edge);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 70%, transparent), color-mix(in srgb, var(--c) 18%, transparent));
+}
+.sheet-head h2 { font-size: 1.3rem; letter-spacing: .08em; text-transform: uppercase; }
+.kv dt, .readout dt, .pick-facts dt, .dt-headrow { font-family: var(--display); font-style: normal; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+.kv dd, .readout dd { font-variant-numeric: tabular-nums; }
+.card-next { background: transparent; border-bottom: 1px solid var(--rule); }
+.sub { border-top: 1px solid var(--rule); font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
+
+.game-menu-backdrop { background: radial-gradient(ellipse at center, rgba(5, 8, 22, .35), rgba(2, 3, 10, .82)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.game-menu h2 { font-size: 1.15rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; }
+.menu-title { font-size: 1.9rem !important; font-weight: 300 !important; letter-spacing: .28em !important; background: linear-gradient(90deg, #9fe3ff, #ffffff 45%, #ffcf86); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.menu-title::before, .menu-title::after { content: none; }
+.menu-note { color: var(--ink-soft); }
+.menu-toast { background: var(--glass-strong); color: var(--hud); font-family: var(--display); box-shadow: inset 0 0 0 1px var(--edge), 0 8px 24px rgba(0, 0, 0, .5); }
+.fs-label { font-family: var(--display); font-size: .82rem; letter-spacing: .06em; }
+
+.nav-overlay { background: radial-gradient(ellipse at 50% 0%, #0d1530, #03050c 70%); color: var(--hud); }
+.nav-head { border-bottom: 1px solid var(--edge); }
+.nav-foot, .map-legend { color: var(--hud-dim); }
+.mini { background: rgba(255, 255, 255, .05); border-color: var(--edge); color: var(--ink); font-family: var(--display); }
+.map-route { background: var(--glass); border-color: var(--edge); }
+.pick-head { color: #fff; font-family: var(--display); font-weight: 600; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 70%, transparent), color-mix(in srgb, var(--c) 15%, transparent)); }
+.dt-row.on, .rs-next, .rs-here { background: rgba(127, 214, 255, .1); }
+.dt-name, .rs-name, .rs-mark { font-family: var(--display); }
+.rs-next .rs-mark, .rs-here .rs-mark { color: var(--amber); }
+
+@media (max-width: 420px) {
+  .hud { font-size: .82rem; }
+  .banner-title { font-size: 1.1rem; letter-spacing: .22em; }
+  .menu-title { font-size: 1.5rem !important; letter-spacing: .2em !important; }
+}

@@ -1,0 +1,15 @@
+# EXP-12: Use a bridge staff: the flag lieutenant filters comms, the sensor officer, the master of guns, the marine commander (done point 5, part 1)
+Source: <local> done point 5 ("Use a bridge staff (flag lieutenant filtering comms, sensor officer, master of guns, marine commander)"); BRIDGE §2, §4, §8; battle-sims/01-17 battles 4, 8; 24-29 battle 24
+Start state: new skirmish at Saturn's rings, seed 12, 16 v 16 so the traffic is heavy, with a 6-ship enemy reinforcement arriving by jump at 3:00 (setup `saturn-16v16-reinforced`, assumed). Steps 8–9 go past done point 5 (comms can break, BRIDGE §8): Daedalus keeps or cuts them.
+| Step | How | Player does | Player sees (checkable) | Vision ref |
+| 1 | ui | Opens the staff panel | Four staff officers by name with their abilities: flag lieutenant, sensor officer, master of guns, marine commander [both]; probe `staff` has the four with abilities | BRIDGE §2 |
+| 2 | ui | Watches the queue in heavy traffic | The flag lieutenant groups duplicates ("Three ships report shields holding") and folds status; probe: rows shown < raw reports raised [both] | BRIDGE §2 "Filters and ranks… groups duplicates" |
+| 3 | probe | Same seed with a weak flag lieutenant | An important report is buried (urgent sits below routine or folds) and noise gets through: more rows shown | BRIDGE §2 "When they are weak" |
+| 4 | ui | Waits for the master of guns | A recommendation as a decision report ("Recommend all fire on her port side") with Approve / another target; Approve sets the fleet's focus [both]; probe: the ships it names take that target | BRIDGE §2 master of guns "Recommends targets and fire distribution across the fleet" |
+| 5 | probe | Same seed with a weak master of guns | It recommends a target whose side is strong more often; fire is wasted (probe: shield damage per shot lower) | BRIDGE §2 "Ships waste fire on the wrong targets" |
+| 6 | ui | Watches the clock near 3:00 | The sensor officer raises an urgent: "A jump signature. Large." before the reinforcement drops [both]; probe: urgent time < arrival time | battle 8; BRIDGE §2 sensor officer |
+| 7 | ui | Waits for a boarding moment | The marine commander proposes the launch ("Their bow's nearly open. Board?"); the master of guns confirms when the side is truly down [both] | battle 4; BRIDGE §2 marine commander |
+| 8 | ui | Lets enemy missiles take out his comms array | The queue greys; the flag lieutenant says the array is gone; his own officers still answer; captains carry on with their last order or intent [both]; probe `flagship.systems.comms` = 0 | BRIDGE §8; battle 24 |
+| 9 | ui | Sends one order by courier | A fighter carries it in view and it arrives after a delay; the captain acts on it [both] (needs fighters, which no package owns yet) | BRIDGE §8 "Couriers"; battle 24 |
+| 10 | probe | Lets boarders take a deck of his flagship (as EXP-08) | A staff officer can be lost, and that officer's job degrades (probe: staff member status lost; its function runs at the weak level) | BRIDGE §2 "lost if the flagship is boarded" |
+Feel checks (Caleb only): does the staff feel like people taking work off him, or like more menus?

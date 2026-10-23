@@ -1,0 +1,84 @@
+/* The skirmish HUD. Shared tokens only (styles.css / styles-glass.css); a house's colour arrives as --house. */
+.skirmish { position: fixed; inset: 0; background: var(--night); overflow: hidden; color: var(--hud); font-family: var(--body); }
+.skirmish-stage { position: absolute; inset: 0; }
+.skirmish-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.skirmish-canvas:active { cursor: grabbing; }
+
+.skirmish-top, .skirmish-bottom {
+  position: absolute; left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 16px;
+  pointer-events: none;
+}
+.skirmish-top { top: 0; align-items: flex-start; justify-content: space-between; background: linear-gradient(var(--glass-strong), transparent); }
+.skirmish-bottom { bottom: 0; flex-direction: column; background: linear-gradient(transparent, var(--glass-strong)); }
+
+.skirmish-title { display: flex; flex-direction: column; gap: 2px; }
+.skirmish-title h1 { font-family: var(--display); font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hud); }
+.skirmish-title span { font-size: 15px; color: var(--hud-dim); font-variant-numeric: tabular-nums; }
+
+.skirmish-sides { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.skirmish-sides li { display: flex; align-items: center; gap: 8px; font-size: 16px; padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; background: var(--glass); }
+.skirmish-sides i { width: 10px; height: 10px; border-radius: 50%; background: var(--house); box-shadow: 0 0 8px var(--house); }
+.skirmish-caps { font-size: 13px; color: var(--hud-dim); } /* PKG-22 (F-07): what the count is made of */
+.skirmish-sides b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.skirmish-comms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; max-width: 520px; }
+.skirmish-comms li { font-size: 16px; line-height: 1.3; color: var(--hud); text-shadow: 0 1px 2px var(--night); animation: skirmish-fade 1.2s ease 6s forwards; }
+/* PKG-15: a line in the event log fades six seconds after it lands (the list re-renders when news arrives, so new news
+   brings the last lines back); the comms queue keeps everything that needs an answer. */
+@keyframes skirmish-fade { to { opacity: 0; } }
+.skirmish-comms li.quiet { color: var(--hud-dim); }
+.skirmish-comms time { color: var(--amber); font-variant-numeric: tabular-nums; margin-right: 6px; }
+/* PKG-17: the help line sits in the header between the title and the sides, so it never meets the order bar. */
+.skirmish-hint { margin: 0; font-size: 14px; line-height: 1.5; color: var(--hud-dim); }
+.skirmish-hint > span { display: inline-block; white-space: pre; }
+.skirmish-top .skirmish-hint { order: 1; flex: 1 1 0; min-width: 0; align-self: flex-start; padding-top: 4px; text-align: center; }
+.skirmish-top .skirmish-sides { order: 2; }
+.skirmish-hint kbd {
+  display: inline-block; min-width: 18px; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px;
+  font: 600 12px/16px var(--body); text-align: center; color: var(--hud);
+}
+/* Phone: no keyboard, so only the drag; at the bottom left, clear of the Fleet button, gone while the fleet is open. */
+@media (max-width: 760px) {
+  .skirmish-top .skirmish-hint { position: fixed; left: 12px; right: 210px; bottom: 18px; padding: 0; text-align: left; font-size: 13px; }
+  .skirmish-hint > .skirmish-hint-desk { display: none; }
+  .skirmish:has(.cx-open) .skirmish-hint, .skirmish:has(.skirmish-end) .skirmish-hint { display: none; }
+}
+
+@media (max-width: 480px) {
+  .skirmish-top, .skirmish-bottom { padding: 10px 12px; }
+  .skirmish-title h1 { font-size: 19px; }
+  .skirmish-sides li { font-size: 15px; padding: 2px 8px; }
+}
+
+/* The end screen: outcome, reason, and each side's tally. Legible at 375 px. */
+.skirmish-end { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: var(--glass); pointer-events: auto; }
+.skirmish-end-card {
+  width: min(460px, 100%); max-height: calc(100% - 16px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  padding: 20px; border: 1px solid var(--edge-hot); border-radius: 12px; background: var(--glass-strong);
+}
+.skirmish-end-card h2 { margin: 0; font-family: var(--display); font-size: 34px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.skirmish-end-reason { margin: 0; font-size: 17px; line-height: 1.35; color: var(--hud); }
+.skirmish-end-when { margin: 0; font-size: 14px; color: var(--hud-dim); text-transform: capitalize; font-variant-numeric: tabular-nums; }
+.skirmish-end-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 16px; table-layout: fixed; }
+.skirmish-end-table th, .skirmish-end-table td { padding: 6px 4px; border-bottom: 1px solid var(--rule); text-align: right; }
+.skirmish-end-table th[scope='row'] { text-align: left; font-weight: 400; color: var(--hud-dim); }
+.skirmish-end-table thead th { font-size: 14px; font-weight: 600; line-height: 1.25; vertical-align: bottom; overflow-wrap: anywhere; }
+.skirmish-end-table thead i { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: var(--house); box-shadow: 0 0 6px var(--house); }
+.skirmish-end-table td { font-variant-numeric: tabular-nums; font-weight: 600; }
+.skirmish-end-restart {
+  align-self: center; margin-top: 10px; min-height: 44px; padding: 8px 28px; font: inherit; font-size: 17px; letter-spacing: 0.06em;
+  color: var(--night); background: var(--gold); border: 0; border-radius: 999px; cursor: pointer;
+}
+.skirmish-end-restart:hover, .skirmish-end-restart:focus-visible { background: var(--gold-soft); outline: 2px solid var(--edge-hot); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .skirmish-end-card { padding: 16px 14px; }
+  .skirmish-end-card h2 { font-size: 28px; }
+  .skirmish-end-table { font-size: 15px; }
+}
+
+/* PKG-21 TRC05-4: with a ship selected the order bar (two rows) grew under the crew panel at short heights (1244x608:
+   "All guns on Io" could not be clicked). On desktop the bar stops short of the crew panel and the panel sits above it. */
+@media (min-width: 761px) {
+  .skirmish .cx-roster .cx-orders { margin-right: 316px; }
+  .skirmish .cx-crew { z-index: 2; }
+}

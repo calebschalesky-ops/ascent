@@ -1,0 +1,18 @@
+# EXP-11: Give an intent order, amend a request, and see captains protest, refuse or act on their own (done point 4)
+Source: <local> done point 4 ("Give an intent order ('open their port side within a minute'), amend a request ('yes, but only after the boarders launch'), and see captains protest, refuse, or act on their own by their traits."); BRIDGE §5, §6; battle-sims/01-17 battles 6, 11, 12
+Start state: new skirmish at Europa, seed 11, player roster fixed: a Veteran at Judgement 9, a Bold at Judgement 3, a Glory-hound at loyalty 45 who has been denied, a Fanatic, a By-the-book (fixture `rosters/pushback-mix`, assumed)
+| Step | How | Player does | Player sees (checkable) | Vision ref |
+| 1 | ui | Gives the Veteran an intent: target, goal "open their port side", time "within a minute" | The order costs 2 command points [both]; probe `order.kind` = `intent`, goal and deadline stored | BRIDGE §5 "Intent"; command points |
+| 2 | ui | Watches | The captain says the plan back ("I'll swing wide and come in on her port side") and the ghost line shows the maneuver he chose [both] | BRIDGE §5 "report the plan back"; §12b |
+| 3 | ui | Watches the target turn to cover its port side | The Veteran changes his approach without a new order and says so [both]; probe: a plan-change event with no admiral order between | BRIDGE §5 "they react to things you can't see" |
+| 4 | probe | Gives the same intent to the Bold at Judgement 3 | He takes the most direct route through the enemy's fire and arrives with shields down (probe: hull/shield taken en route higher than the Veteran's) | BRIDGE §5 "A poor captain given an intent makes a mess"; battle 6 |
+| 5 | ui | Lets an intent run past its time | The captain reports it ("Port side's still up. Need another minute or another ship.") and waits for a new order or carries on (vision silent on a missed deadline; assumed) [both] | BRIDGE §5 |
+| 6 | ui | Answers a captain's request with Amend: "yes, but only after the boarders launch" | Amend is the third answer; the captain waits for the condition and acts on it [both]; probe: the action's time ≥ the condition event's time | BRIDGE §5 "Amend" |
+| 7 | ui | Amends a pull-back request: "but cover that ship's withdrawal first" | The captain covers, then pulls back [both] | BRIDGE §5 |
+| 8 | ui | Gives a risky direct order to a strained captain | A protest out loud ("That puts us in their railgun arc. Confirm?"); a second confirm and he goes; the protest goes into his record either way [both]; probe: captain memory entry | BRIDGE §6 "Protest" |
+| 9 | ui | Orders the Fanatic to withdraw | He refuses out loud ("I won't strike my colours"); answers offered: Relieve / Let it go [both] | BRIDGE §6 "Refuse" |
+| 10 | ui | Denies the Glory-hound's request to go for the flagship | "With respect, Admiral, no." He breaks from the line toward it, out loud, never silently [both] | BRIDGE §6; §12b rule 2; battle 11 |
+| 11 | ui | Backs him: orders two ships to follow and one to close the gap, then "Go. We're behind you." | The gap in the line closes and the defiant ship has support; the defiance report offered Back him / Order him back / Relieve [both] | battles 11–12 table |
+| 12 | ui | Watches a Bold captain near a crippled enemy | He acts without asking and reports after ("Ramming. Sorry, Admiral.") [both] | BRIDGE §6 "Initiative" |
+| 13 | probe | Same seed, the Bold and the Glory-hound made By-the-book | No initiative or defiance events: who pushes back follows traits, not dice | prompt done point 4 "by their traits" |
+Feel checks (Caleb only): is knowing whom to trust with an intent the skill? When a captain disobeys, does it feel like a new situation and not a broken game?

@@ -1,0 +1,15 @@
+/* The director's picture-in-picture frame (PKG-11). Shared tokens only. The picture itself is drawn into the canvas
+   underneath this box by a second render pass; the box is the border and the caption. */
+.director-pip {
+  position: absolute; margin: 0; box-sizing: border-box; pointer-events: none;
+  border: 1px solid var(--edge-hot); border-radius: 6px;
+  box-shadow: 0 0 0 1px var(--night), 0 6px 22px var(--night);
+}
+.director-pip[hidden] { display: none; }
+.director-pip figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 8px;
+  font-family: var(--body); font-size: 14px; line-height: 1.25; color: var(--hud);
+  background: linear-gradient(transparent, var(--glass-strong)); border-radius: 0 0 6px 6px;
+  overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+.director-pip figcaption::first-letter { text-transform: uppercase; }

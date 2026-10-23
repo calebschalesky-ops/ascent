@@ -1,0 +1,180 @@
+/* The comms HUD (PKG-09). Shared tokens only (styles.css); the player's house colour arrives as --house, a captain's
+   mood as --mood. Urgent is --danger, decision --amber, status --hud-dim: one meaning per colour. */
+.cx { position: absolute; inset: 0; pointer-events: none; font-family: var(--body); color: var(--hud); }
+/* PKG-15: the battle stays the picture. The queue is 30% of the width (280-380 px); the crew panel folds to its five
+   officer chips; the roster strip is one compact row of cards. */
+.skirmish { --cx-queue-w: clamp(280px, 30vw, 380px); }
+.cx button { font: inherit; pointer-events: auto; }
+.cx kbd {
+  display: inline-block; min-width: 18px; margin-right: 6px; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px;
+  font: 600 12px/16px var(--body); text-align: center;
+}
+
+/* The order lines and selection rings, over the battle. */
+.cx-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cx-line { stroke: var(--house); stroke-width: 1.4; stroke-linecap: round; opacity: 0.85; fill: none; }
+.cx-ring { fill: none; stroke-width: 1.6; }
+.cx-ring-own { stroke: var(--house); }
+.cx-ring-target { stroke: var(--danger); stroke-dasharray: 4 3; }
+/* PKG-17: what a click would pick, before he clicks: a thinner, fainter ring in the same colour as the ring it becomes. */
+.cx-ring-hover { stroke-width: 1.2; opacity: 0.75; stroke-dasharray: none; }
+
+/* The old event ticker sits between the queue and the crew panel, above the roster strip (PKG-15: it follows the
+   queue's width, and its lines fade a few seconds after they land: skirmish.css). */
+/* PKG-17: it sat on the selected ship's order bar (two rows since PKG-12); now it hangs under the header, between the
+   queue and the director's picture-in-picture (PKG-11: 30% of the width, clamped 168-380 px). */
+.skirmish:has(.cx) .skirmish-bottom { top: 64px; bottom: auto; left: calc(var(--cx-queue-w) + 24px); right: calc(clamp(168px, 30vw, 380px) + 24px); padding: 0; align-items: flex-start; background: none; }
+.skirmish:has(.cx) .skirmish-comms li { font-size: 14px; }
+@media (max-width: 980px) { .skirmish:has(.cx) .skirmish-bottom { display: none; } }
+
+/* ── The queue, left ─────────────────────────────────────────────────────────────────────────────────────────── */
+.cx-queue {
+  position: absolute; left: 12px; top: 76px; bottom: 80px; width: min(var(--cx-queue-w), calc(100% - 24px));
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+}
+.cx-queue ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; pointer-events: auto; scrollbar-width: thin; }
+.cx-r {
+  position: relative; display: flex; gap: 10px; padding: 8px 10px 10px; border-radius: 10px; border: 1px solid var(--edge);
+  border-left: 4px solid var(--lvl); background: color-mix(in srgb, var(--lvl) 10%, var(--glass-strong));
+}
+.cx-urgent { --lvl: var(--danger); background: color-mix(in srgb, var(--danger) 22%, var(--glass-strong)); }
+.cx-decision { --lvl: var(--amber); }
+.cx-status { --lvl: var(--hud-dim); padding: 5px 10px; }
+.cx-status .cx-text { color: var(--hud-dim); font-size: 14px; }
+.cx-status .cx-portrait { width: 26px; height: 26px; font-size: 11px; }
+.cx-status .cx-timer { display: none; }
+/* PKG-22 (F-07): a capture, either way, reads as a card of its own, not a grey status line. */
+.cx-status.cx-prize { padding: 9px 10px; border-left: 4px solid var(--lvl); }
+.cx-status.cx-prize .cx-text { color: var(--hud); font-size: 15px; font-weight: 600; }
+.cx-status.cx-prize .cx-level { color: var(--lvl); font-weight: 700; }
+.cx-prize-won { --lvl: var(--good); background: color-mix(in srgb, var(--good) 22%, var(--glass-strong)); }
+.cx-prize-lost { --lvl: var(--danger); background: color-mix(in srgb, var(--danger) 22%, var(--glass-strong)); }
+.cx-quiet { color: var(--hud-dim); font-size: 14px; }
+.cx-sel { border-color: var(--lvl); box-shadow: 0 0 0 1px var(--lvl), 0 0 14px color-mix(in srgb, var(--lvl) 40%, transparent); }
+.cx-urgent.cx-sel { animation: cx-pulse 1.2s ease-in-out infinite; }
+@keyframes cx-pulse { 50% { box-shadow: 0 0 0 1px var(--lvl), 0 0 22px color-mix(in srgb, var(--lvl) 70%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .cx-urgent.cx-sel { animation: none; } }
+
+.cx-portrait {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--house); color: var(--night); font: 700 15px/1 var(--display); letter-spacing: 0.02em;
+  box-shadow: 0 0 0 2px var(--night), 0 0 0 4px var(--mood);
+}
+.cx-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.cx-who { margin: 0; font-size: 13px; color: var(--hud-dim); line-height: 1.3; }
+.cx-who b { color: var(--hud); font-weight: 600; }
+.cx-level { margin-right: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lvl, var(--hud-dim)); }
+.cx-text { margin: 0; font-size: 15px; line-height: 1.35; color: var(--hud); }
+.cx-answers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cx-answers button, .cx-buttons button, .cx-orders button, .cx-menu button, .cx-all button {
+  min-height: 32px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--edge); background: var(--glass);
+  color: var(--hud); font-size: 14px; cursor: pointer;
+}
+.cx-answers button { border-color: color-mix(in srgb, var(--lvl) 60%, var(--edge)); }
+.cx-sel .cx-answers button { color: var(--hud); background: color-mix(in srgb, var(--lvl) 20%, var(--glass)); }
+.cx button:hover, .cx button:focus-visible { border-color: var(--edge-hot); outline: none; background: color-mix(in srgb, var(--house) 14%, var(--glass)); }
+.cx button[aria-pressed='true'] { border-color: var(--house); background: color-mix(in srgb, var(--house) 24%, var(--glass)); }
+.cx-timer { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0 0 10px 10px; overflow: hidden; }
+.cx-timer::after { content: ''; position: absolute; inset: 0; background: var(--lvl); transform-origin: left; transform: scaleX(var(--left)); transition: transform 0.25s linear; }
+.cx-hint, .cx-notice { margin: 0; font-size: 13px; color: var(--hud-dim); pointer-events: none; }
+.cx-notice { pointer-events: auto; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--amber); background: var(--glass-strong); color: var(--amber); font-size: 14px; }
+
+/* The command points meter, at the head of the queue. */
+.cx-meter { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--edge); background: var(--glass-strong); font-size: 13px; pointer-events: auto; }
+.cx-meter-label { color: var(--hud-dim); text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; font-weight: 700; }
+.cx-meter-pips { display: flex; gap: 3px; }
+.cx-meter-pips i { width: 16px; height: 8px; border-radius: 2px; border: 1px solid var(--edge-hot); background: linear-gradient(90deg, var(--house) calc(var(--fill) * 100%), transparent 0); }
+.cx-meter-pips i.spend { outline: 2px solid var(--amber); outline-offset: 1px; }
+.cx-meter b { font-variant-numeric: tabular-nums; }
+.cx-meter-cost { color: var(--amber); }
+.cx-meter-cost.short { color: var(--danger); font-weight: 600; }
+
+/* ── The flagship's crew, right ──────────────────────────────────────────────────────────────────────────────── */
+.cx-crew {
+  /* Below the director's picture-in-picture (PKG-11: top 92 px, 30% of the width clamped 168–380 px, 16:10). */
+  --pip-clear: calc(100px + clamp(168px, 30vw, 380px) / 1.6);
+  position: absolute; right: 12px; top: var(--pip-clear); width: auto; max-height: calc(100% - var(--pip-clear) - 84px); overflow-y: auto; pointer-events: auto;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 12px; border: 1px solid var(--edge); background: var(--glass-strong);
+}
+.cx-crew-open { width: 300px; }
+.cx-chips { display: flex; flex-direction: column; gap: 4px; }
+.cx-crew-open .cx-chips { flex-direction: row; flex-wrap: wrap; }
+.cx-chip {
+  min-height: 30px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass);
+  color: var(--hud); font-size: 13px; text-align: left; cursor: pointer; white-space: nowrap;
+}
+.cx-crew-open .cx-chip { font-size: 12px; padding: 2px 8px; min-height: 26px; }
+.cx-chip[aria-expanded='true'] { border-color: var(--house); background: color-mix(in srgb, var(--house) 24%, var(--glass)); }
+.cx-crew h2 { margin: 0; font: 600 14px var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--house); }
+.cx-officer { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 1px solid var(--rule); }
+.cx-buttons { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cx-buttons button, .cx-all button { min-height: 28px; padding: 2px 8px; font-size: 13px; }
+.cx-dim { color: var(--hud-dim); font-size: 13px; }
+.cx-armed { margin: 0; color: var(--danger); font-size: 13px; }
+.cx-fight { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cx-split { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-areas: '. fore .' 'port even starboard' '. aft .'; gap: 3px; width: 100%; }
+.cx-split .cx-side {
+  display: flex; flex-direction: column; align-items: center; gap: 0; min-height: 40px; padding: 2px; border-radius: 6px; border: 1px solid var(--edge);
+  background: linear-gradient(0deg, color-mix(in srgb, var(--house) 45%, transparent) calc(var(--p, 0) * 100%), var(--glass) 0); color: var(--hud); cursor: pointer; font-size: 12px;
+}
+.cx-split .cx-side b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.cx-side-fore { grid-area: fore; } .cx-side-aft { grid-area: aft; } .cx-side-port { grid-area: port; } .cx-side-starboard { grid-area: starboard; }
+.cx-side-even { grid-area: even; }
+.cx-all { display: flex; flex-wrap: wrap; gap: 3px; }
+
+/* PKG-17: between phone and desktop the crew panel sat over the right third of the battle (TRC03-10): tighter chips. */
+@media (max-width: 980px) {
+  .cx-crew { padding: 8px; gap: 6px; }
+  .cx-crew:not(.cx-crew-open) .cx-chip { min-height: 26px; padding: 2px 8px; font-size: 12px; }
+}
+
+/* ── The roster strip, bottom ────────────────────────────────────────────────────────────────────────────────── */
+.cx-roster { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 4px; padding: 6px 12px 6px; pointer-events: none; background: linear-gradient(transparent, var(--glass) 55%); }
+.cx-roster ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; pointer-events: auto; scrollbar-width: thin; }
+.cx-card {
+  display: flex; align-items: center; gap: 6px; min-width: 0; padding: 3px 10px 3px 4px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--glass-strong); color: var(--hud); text-align: left; cursor: pointer;
+}
+.cx-card .cx-portrait { width: 26px; height: 26px; font-size: 11px; box-shadow: 0 0 0 1px var(--night), 0 0 0 3px var(--mood); }
+/* Compact: name and the captain's word; the class is in the card's title. */
+.cx-card-text > span:not(.cx-word) { display: none; }
+.cx-card-text b, .cx-card-text .cx-word { white-space: nowrap; }
+.cx-card-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.cx-card-text b { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.cx-card-text span { font-size: 12px; color: var(--hud-dim); text-transform: capitalize; }
+.cx-card-text .cx-word { font-size: 13px; font-weight: 600; text-transform: none; }
+.cx-card.cx-sel { border-color: var(--house); box-shadow: 0 0 0 1px var(--house); }
+.cx-card.cx-out { opacity: 0.5; }
+.cx-orders { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; pointer-events: auto; font-size: 14px; }
+
+/* ── The order menu on an enemy, and the ping menu ───────────────────────────────────────────────────────────── */
+.cx-menu {
+  position: fixed; z-index: 5; transform: translate(12px, -50%); pointer-events: auto; display: flex; flex-direction: column; gap: 4px;
+  padding: 8px; border-radius: 10px; border: 1px solid var(--edge-hot); background: var(--night); max-width: calc(100vw - 24px);
+  box-shadow: 0 6px 24px var(--night);
+}
+.cx-menu-left { transform: translate(calc(-100% - 12px), -50%); }
+.cx-menu-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cx-menu-row .cx-dim { width: 44px; }
+.cx-dim-button { background: none !important; border: 0 !important; color: var(--hud-dim) !important; text-align: left; }
+
+/* ── Desktop shows everything; at phone width the queue and its keys stay, the rest folds behind "Fleet". ─────── */
+.cx-toggle { display: none; }
+@media (max-width: 760px) {
+  .cx-queue { top: 128px; bottom: auto; max-height: 48%; width: calc(100% - 24px); }
+  .cx-crew { width: auto; }
+  .cx-crew, .cx-roster { display: none; }
+  .cx-open .cx-crew { display: flex; top: auto; bottom: 108px; left: 12px; right: 12px; width: auto; max-height: 40%; }
+  .cx-open .cx-roster { display: flex; }
+  .cx-toggle {
+    display: block; position: absolute; right: 12px; bottom: 12px; min-height: 40px; padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--edge-hot); background: var(--glass-strong); color: var(--hud); font-size: 14px; cursor: pointer; z-index: 2;
+  }
+  .cx-open .cx-toggle { bottom: auto; top: 128px; }
+  .cx-open .cx-queue { display: none; }
+  .skirmish:has(.cx) .skirmish-bottom { display: none; }
+  .cx-r { padding: 7px 8px 9px; }
+  .cx-portrait { width: 34px; height: 34px; font-size: 13px; }
+  .cx-text { font-size: 15px; }
+  .cx-menu { left: 12px !important; right: 12px; top: auto !important; bottom: 110px; transform: none; }
+}

@@ -1,0 +1,46 @@
+/* PKG-21: input feedback (armed orders, misses), the enemy list, the stable roster's gone cards. Shared tokens only. */
+
+/* F-12: an order waiting for an enemy click. */
+.in-aiming { cursor: crosshair; }
+.in-armed {
+  position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 3; pointer-events: none;
+  padding: 5px 14px; border-radius: 999px; border: 1px solid var(--danger); background: var(--glass-strong);
+  color: var(--hud); font-size: 14px; white-space: nowrap;
+}
+.in-miss {
+  position: absolute; z-index: 3; pointer-events: none; transform: translate(-50%, -150%);
+  padding: 4px 10px; border-radius: 8px; border: 1px solid var(--amber); background: var(--glass-strong);
+  color: var(--amber); font-size: 13px; white-space: nowrap;
+}
+
+/* PKG-17's request: the enemy ships as a list. */
+.in-enemies { position: relative; align-self: flex-start; pointer-events: auto; }
+.in-enemies-toggle {
+  min-height: 30px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--danger); background: var(--glass-strong);
+  color: var(--hud); font: 14px var(--body); cursor: pointer;
+}
+.in-enemies-toggle b { color: var(--danger); margin-left: 4px; }
+.in-enemies ul {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 4; list-style: none; margin: 0; padding: 6px;
+  display: flex; flex-direction: column; gap: 3px; min-width: 240px; max-height: 50vh; overflow-y: auto;
+  border-radius: 10px; border: 1px solid var(--edge-hot); background: var(--glass-strong);
+}
+.in-enemies li button {
+  width: 100%; text-align: left; min-height: 30px; padding: 3px 8px; border-radius: 6px; border: 1px solid transparent;
+  background: transparent; color: var(--hud); font: 14px var(--body); cursor: pointer;
+}
+.in-enemies li button:hover, .in-enemies li button:focus-visible { border-color: var(--danger); }
+.in-enemies li button.in-sel { border-color: var(--danger); background: var(--glass); }
+.in-enemies li span { color: var(--hud-dim); }
+.in-enemies li .in-where { color: var(--amber); }
+
+/* F-13: a ship that left keeps its slot, greyed. */
+.cx-card.in-gone { opacity: 0.4; filter: grayscale(1); cursor: default; }
+
+/* PKG-16's request / TRC05-5: the escort warning line in the order menu. */
+.in-escort-warn { margin: 0 0 4px; color: var(--amber); font-size: 13px; }
+
+@media (max-width: 760px) {
+  .in-armed { top: auto; bottom: 150px; white-space: normal; max-width: calc(100% - 24px); text-align: center; }
+  .in-enemies ul { min-width: 0; width: calc(100vw - 24px); max-height: 40vh; }
+}
